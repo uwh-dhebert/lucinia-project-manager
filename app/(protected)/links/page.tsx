@@ -125,23 +125,25 @@ export default function LinksPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {groups.map((group) => (
             <div key={group.id} className="border border-slate-700 rounded-2xl overflow-hidden bg-slate-800 flex flex-col h-full">
-              <div className="p-4 border-b border-slate-700">
-                <h2 className="text-lg font-bold text-white mb-3">{group.name}</h2>
-                <div className="flex gap-2">
+              <div className="p-4 border-b border-slate-700 flex justify-between items-start">
+                <h2 className="text-lg font-bold text-white">{group.name}</h2>
+                <div className="flex gap-1 flex-shrink-0">
                   <button
                     onClick={() => {
                       setSelectedGroupId(group.id);
                       setShowLinkModal(true);
                     }}
-                    className="flex-1 px-3 py-1.5 bg-green-600 text-white text-xs font-medium rounded hover:bg-green-700 transition-colors"
+                    className="p-1.5 text-green-400 hover:text-green-300 hover:bg-green-900/30 rounded transition-colors"
+                    title="Add link"
                   >
-                    + Add Link
+                    ➕
                   </button>
                   <button
                     onClick={() => handleDeleteGroup(group.id)}
-                    className="flex-1 px-3 py-1.5 bg-red-600 text-white text-xs font-medium rounded hover:bg-red-700 transition-colors"
+                    className="p-1.5 text-red-400 hover:text-red-300 hover:bg-red-900/30 rounded transition-colors"
+                    title="Delete group"
                   >
-                    Delete
+                    🗑️
                   </button>
                 </div>
               </div>
@@ -154,12 +156,12 @@ export default function LinksPage() {
                 <div className="flex-1 overflow-y-auto">
                   <div className="divide-y divide-slate-700">
                     {group.links.map((link) => (
-                      <div key={link.id} className="p-3 hover:bg-slate-700 transition-colors group/link">
+                    <div key={link.id} className="p-3 hover:bg-slate-700 transition-colors group/link flex items-start justify-between gap-2">
                         <a
                           href={link.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="block"
+                          className="flex-1 min-w-0"
                         >
                           <h3 className="text-sm font-semibold text-blue-400 hover:text-blue-300 transition-colors truncate">
                             {link.title}
@@ -168,9 +170,10 @@ export default function LinksPage() {
                         </a>
                         <button
                           onClick={() => handleDeleteLink(group.id, link.id)}
-                          className="mt-2 w-full px-2 py-1 bg-red-600 text-white text-xs font-medium rounded opacity-0 group-hover/link:opacity-100 transition-opacity hover:bg-red-700"
+                          className="flex-shrink-0 p-1.5 text-red-400 hover:text-red-300 hover:bg-red-900/30 rounded transition-colors"
+                          title="Delete link"
                         >
-                          Delete
+                          🗑️
                         </button>
                       </div>
                     ))}
