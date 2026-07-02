@@ -1,7 +1,7 @@
 'use client';
 
 import { Home, FolderOpen, Sparkles, Users, Settings, Menu } from 'lucide-react';
-simport { usePathname } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
 import { WikiSidebar } from '@/components/WikiSidebar';

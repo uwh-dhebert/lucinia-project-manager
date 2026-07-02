@@ -1,7 +1,10 @@
 import { createClient } from '@/utils/supabase/server';
 import { NextResponse } from 'next/server';
 
-export async function POST(req: Request) {
+export async function DELETE(
+  req: Request,
+  { params }: { params: { id: string } }
+) {
   try {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -10,12 +13,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const body = await req.json();
-    const { groupId, title, url } = body;
-
-    if (!groupId || !title || !url) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
-    }
+    const groupId = params.id;
 
     // Verify the group belongs to the user
     const { data: group } = await supabase
@@ -28,23 +26,20 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
-    const { data: link, error } = await supabase
-      .from('links')
-      .insert({
-        groupId,
-        title,
-        url,
-      })
-      .select();
+    // Delete the group (links will cascade delete)
+    const { error } = await supabase
+      .from('link_groups')
+      .delete()
+      .eq('id', groupId);
 
     if (error) {
-      console.error('Error creating link:', error);
+      console.error('Error deleting group:', error);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    return NextResponse.json(link?.[0] || {});
+    return NextResponse.json({ success: true });
   } catch (error: any) {
-    console.error('Error creating link:', error);
+    console.error('Error deleting group:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

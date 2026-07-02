@@ -35,22 +35,14 @@ export default function ProjectDetailPage() {
 
   useEffect(() => {
     loadProject()
-    loadDesignDoc()
   }, [slug])
 
-  const loadDesignDoc = async () => {
-    try {
-      const response = await fetch(`/api/projects/${project?.id}/design-doc-save`)
-      if (response.ok) {
-        const data = await response.json()
-        if (data.designDoc?.content) {
-          setDesignDocContent(data.designDoc.content)
-        }
-      }
-    } catch (err) {
-      console.error('Error loading design doc:', err)
+  // Load design doc after project is loaded
+  useEffect(() => {
+    if (project?.id) {
+      loadDesignDoc()
     }
-  }
+  }, [project?.id])
 
   const loadProject = async () => {
     try {
@@ -68,6 +60,20 @@ export default function ProjectDetailPage() {
       setError('Failed to load project')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const loadDesignDoc = async () => {
+    try {
+      const response = await fetch(`/api/projects/${project?.id}/design-doc-save`)
+      if (response.ok) {
+        const data = await response.json()
+        if (data.designDoc?.content) {
+          setDesignDocContent(data.designDoc.content)
+        }
+      }
+    } catch (err) {
+      console.error('Error loading design doc:', err)
     }
   }
 
@@ -270,11 +276,12 @@ export default function ProjectDetailPage() {
          onClose={() => setDesignDocModalOpen(false)}
          projectName={project.name}
          projectId={project.id}
-         onSave={async (content) => {
-           setDesignDocContent(content)
-           setDesignDocModalOpen(false)
-           // In a real app, you would save this to the database
-         }}
+          onSave={async (content) => {
+            setDesignDocContent(content)
+            setDesignDocModalOpen(false)
+            // Reload design doc to ensure it's synced
+            setTimeout(() => loadDesignDoc(), 500)
+          }}
        />
      </div>
    )

@@ -56,21 +56,99 @@ CREATE TABLE IF NOT EXISTS topics (
 
 CREATE INDEX IF NOT EXISTS topics_projectId_idx ON topics("projectId");
 
--- Links table
-CREATE TABLE IF NOT EXISTS links (
+-- Subjects table (Wiki - belong to topics)
+CREATE TABLE IF NOT EXISTS subjects (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  "topicId" UUID NOT NULL,
+  title VARCHAR(255) NOT NULL,
+  slug VARCHAR(255) NOT NULL,
+  "order" INT DEFAULT 0,
+  "createdAt" TIMESTAMP DEFAULT now(),
+  "updatedAt" TIMESTAMP DEFAULT now(),
+  UNIQUE(slug, "topicId"),
+  FOREIGN KEY ("topicId") REFERENCES topics(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS subjects_topicId_idx ON subjects("topicId");
+
+-- Content Items table (Wiki - belong to subjects)
+CREATE TABLE IF NOT EXISTS content_items (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  "subjectId" UUID NOT NULL,
+  title VARCHAR(255),
+  content TEXT NOT NULL,
+  "order" INT DEFAULT 0,
+  "createdAt" TIMESTAMP DEFAULT now(),
+  "updatedAt" TIMESTAMP DEFAULT now(),
+  FOREIGN KEY ("subjectId") REFERENCES subjects(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS content_items_subjectId_idx ON content_items("subjectId");
+
+-- Project Design Documents
+CREATE TABLE IF NOT EXISTS project_design_docs (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  "projectId" UUID NOT NULL UNIQUE,
+  content TEXT NOT NULL,
+  "createdAt" TIMESTAMP DEFAULT now(),
+  "updatedAt" TIMESTAMP DEFAULT now(),
+  FOREIGN KEY ("projectId") REFERENCES projects(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS project_design_docs_projectId_idx ON project_design_docs("projectId");
+
+-- Project Stories
+CREATE TABLE IF NOT EXISTS project_stories (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  "projectId" UUID NOT NULL,
+  title VARCHAR(255) NOT NULL,
+  description TEXT NOT NULL,
+  "acceptanceCriteria" TEXT[] DEFAULT '{}',
+  "createdAt" TIMESTAMP DEFAULT now(),
+  "updatedAt" TIMESTAMP DEFAULT now(),
+  FOREIGN KEY ("projectId") REFERENCES projects(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS project_stories_projectId_idx ON project_stories("projectId");
+
+-- Project Notes
+CREATE TABLE IF NOT EXISTS project_notes (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  "projectId" UUID NOT NULL,
+  content TEXT NOT NULL,
+  "createdAt" TIMESTAMP DEFAULT now(),
+  "updatedAt" TIMESTAMP DEFAULT now(),
+  FOREIGN KEY ("projectId") REFERENCES projects(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS project_notes_projectId_idx ON project_notes("projectId");
+
+-- Link Groups table (new structure for organized links)
+CREATE TABLE IF NOT EXISTS link_groups (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   "userId" UUID NOT NULL,
-  url TEXT NOT NULL,
   name VARCHAR(255) NOT NULL,
-  description TEXT,
-  category VARCHAR(255) DEFAULT 'general',
-  tags TEXT[] DEFAULT '{}',
+  "order" INT DEFAULT 0,
   "createdAt" TIMESTAMP DEFAULT now(),
   "updatedAt" TIMESTAMP DEFAULT now()
 );
 
-CREATE INDEX IF NOT EXISTS links_userId_idx ON links("userId");
-CREATE INDEX IF NOT EXISTS links_category_idx ON links(category);
+CREATE INDEX IF NOT EXISTS link_groups_userId_idx ON link_groups("userId");
+
+-- Links table (updated structure - belongs to groups)
+DROP TABLE IF EXISTS links CASCADE;
+
+CREATE TABLE links (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  "groupId" UUID NOT NULL,
+  title VARCHAR(255) NOT NULL,
+  url TEXT NOT NULL,
+  "createdAt" TIMESTAMP DEFAULT now(),
+  "updatedAt" TIMESTAMP DEFAULT now(),
+  FOREIGN KEY ("groupId") REFERENCES link_groups(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS links_groupId_idx ON links("groupId");
 
 -- Chat Conversations table
 CREATE TABLE IF NOT EXISTS chat_conversations (
@@ -173,6 +251,12 @@ CREATE TABLE IF NOT EXISTS stories (
 -- Create RLS policies (Row Level Security)
 ALTER TABLE projects ENABLE ROW LEVEL SECURITY;
 ALTER TABLE topics ENABLE ROW LEVEL SECURITY;
+ALTER TABLE subjects ENABLE ROW LEVEL SECURITY;
+ALTER TABLE content_items ENABLE ROW LEVEL SECURITY;
+ALTER TABLE project_design_docs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE project_stories ENABLE ROW LEVEL SECURITY;
+ALTER TABLE project_notes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE link_groups ENABLE ROW LEVEL SECURITY;
 ALTER TABLE links ENABLE ROW LEVEL SECURITY;
 ALTER TABLE chat_conversations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE chat_messages ENABLE ROW LEVEL SECURITY;
@@ -195,6 +279,36 @@ EXECUTE FUNCTION update_updated_at_column();
 
 CREATE TRIGGER update_topics_updated_at
 BEFORE UPDATE ON topics
+FOR EACH ROW
+EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_subjects_updated_at
+BEFORE UPDATE ON subjects
+FOR EACH ROW
+EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_content_items_updated_at
+BEFORE UPDATE ON content_items
+FOR EACH ROW
+EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_project_design_docs_updated_at
+BEFORE UPDATE ON project_design_docs
+FOR EACH ROW
+EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_project_stories_updated_at
+BEFORE UPDATE ON project_stories
+FOR EACH ROW
+EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_project_notes_updated_at
+BEFORE UPDATE ON project_notes
+FOR EACH ROW
+EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_link_groups_updated_at
+BEFORE UPDATE ON link_groups
 FOR EACH ROW
 EXECUTE FUNCTION update_updated_at_column();
 

@@ -110,6 +110,33 @@ export function StoriesTab({ projectId, designDocContent, onStoriesGenerated }: 
 
   const handleUpdateStory = async (index: number) => {
     const updatedStory = stories[index];
+
+    // If story doesn't have an ID, save it as a new story first
+    if (!updatedStory.id) {
+      try {
+        const response = await fetch(`/api/projects/${projectId}/stories-save`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ stories: [updatedStory] }),
+        });
+        if (response.ok) {
+          const data = await response.json();
+          const savedStory = data.stories?.[0];
+          if (savedStory) {
+            const updated = [...stories];
+            updated[index].id = savedStory.id;
+            setStories(updated);
+            return;
+          }
+        }
+      } catch (err) {
+        setError('Error saving story');
+        console.error(err);
+        return;
+      }
+    }
+
+    // If story has an ID, update it via PUT
     try {
       await fetch(`/api/projects/${projectId}/stories-save`, {
         method: 'PUT',
@@ -129,6 +156,7 @@ export function StoriesTab({ projectId, designDocContent, onStoriesGenerated }: 
 
   const handleAddStory = () => {
     const newStory: Story = {
+      id: '',
       title: 'New Story',
       description: '',
       acceptanceCriteria: [''],
@@ -218,24 +246,41 @@ export function StoriesTab({ projectId, designDocContent, onStoriesGenerated }: 
               </div>
             </button>
 
-            {expandedStory === index && (
-              <div className="border-t border-slate-600 px-6 py-4 bg-slate-800 space-y-4">
-                <div>
-                  <label className="block text-sm font-semibold text-slate-300 mb-2">
-                    Description
-                  </label>
-                  <textarea
-                    value={story.description}
-                    onChange={(e) => {
-                      const updated = [...stories];
-                      updated[index].description = e.target.value;
-                      setStories(updated);
-                      handleUpdateStory(index);
-                    }}
-                    className="w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    rows={3}
-                  />
-                </div>
+             {expandedStory === index && (
+               <div className="border-t border-slate-600 px-6 py-4 bg-slate-800 space-y-4">
+                 <div>
+                   <label className="block text-sm font-semibold text-slate-300 mb-2">
+                     Title
+                   </label>
+                   <input
+                     type="text"
+                     value={story.title}
+                     onChange={(e) => {
+                       const updated = [...stories];
+                       updated[index].title = e.target.value;
+                       setStories(updated);
+                       handleUpdateStory(index);
+                     }}
+                     className="w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                   />
+                 </div>
+
+                 <div>
+                   <label className="block text-sm font-semibold text-slate-300 mb-2">
+                     Description
+                   </label>
+                   <textarea
+                     value={story.description}
+                     onChange={(e) => {
+                       const updated = [...stories];
+                       updated[index].description = e.target.value;
+                       setStories(updated);
+                       handleUpdateStory(index);
+                     }}
+                     className="w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                     rows={3}
+                   />
+                 </div>
 
                 <div>
                   <label className="block text-sm font-semibold text-slate-300 mb-2">
@@ -257,16 +302,17 @@ export function StoriesTab({ projectId, designDocContent, onStoriesGenerated }: 
                         className="w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
                     ))}
-                    <button
-                      onClick={() => {
-                        const updated = [...stories];
-                        updated[index].acceptanceCriteria.push('');
-                        setStories(updated);
-                      }}
-                      className="text-sm text-blue-400 hover:text-blue-300"
-                    >
-                      + Add Criterion
-                    </button>
+                     <button
+                       onClick={() => {
+                         const updated = [...stories];
+                         updated[index].acceptanceCriteria.push('');
+                         setStories(updated);
+                         handleUpdateStory(index);
+                       }}
+                       className="text-sm text-blue-400 hover:text-blue-300"
+                     >
+                       + Add Criterion
+                     </button>
                   </div>
                 </div>
 
