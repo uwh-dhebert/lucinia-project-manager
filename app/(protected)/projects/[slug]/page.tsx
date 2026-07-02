@@ -7,6 +7,8 @@ import { EditProjectModal } from '@/components/EditProjectModal'
 import { DesignDocumentModal } from '@/components/DesignDocumentModal'
 import { MarkdownRenderer } from '@/components/MarkdownRenderer'
 import { StoriesTab } from '@/components/StoriesTab'
+import { NotesTab } from '@/components/NotesTab'
+import { ActionsMenu } from '@/components/ActionsMenu'
 
 interface Project {
   id: string
@@ -94,38 +96,26 @@ export default function ProjectDetailPage() {
 
   return (
     <div className="space-y-8">
-      {/* Header */}
-      <div>
-        <Link href="/projects" className="text-blue-400 hover:underline mb-4 inline-block">
-          ← Back to Projects
-        </Link>
-        <h1 className="text-4xl font-bold text-white mt-2">{project.name}</h1>
-        {project.description && (
-          <p className="text-slate-400 mt-2">{project.description}</p>
-        )}
-      </div>
-
-      {/* Info Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-slate-800 border border-slate-700 rounded-2xl p-6">
-          <p className="text-slate-400 text-sm mb-1">Project ID</p>
-          <p className="text-white font-mono text-sm break-all">{project.id}</p>
+      {/* Header with Actions Menu */}
+      <div className="flex justify-between items-start gap-4">
+        <div>
+          <Link href="/projects" className="text-blue-400 hover:underline mb-4 inline-block">
+            ← Back to Projects
+          </Link>
+          <h1 className="text-4xl font-bold text-white mt-2">{project.name}</h1>
+          {project.description && (
+            <p className="text-slate-400 mt-2">{project.description}</p>
+          )}
         </div>
-
-        <div className="bg-slate-800 border border-slate-700 rounded-2xl p-6">
-          <p className="text-slate-400 text-sm mb-1">Slug</p>
-          <p className="text-white font-mono">{project.slug}</p>
-        </div>
-
-        <div className="bg-slate-800 border border-slate-700 rounded-2xl p-6">
-          <p className="text-slate-400 text-sm mb-1">Created</p>
-          <p className="text-white">{new Date(project.createdAt).toLocaleDateString()}</p>
-        </div>
-
-        <div className="bg-slate-800 border border-slate-700 rounded-2xl p-6">
-          <p className="text-slate-400 text-sm mb-1">Last Updated</p>
-          <p className="text-white">{new Date(project.updatedAt).toLocaleDateString()}</p>
-        </div>
+        <ActionsMenu
+          project={project}
+          onEdit={() => setEditModalOpen(true)}
+          onDelete={handleDelete}
+          onGenerateDesignDoc={() => setDesignDocModalOpen(true)}
+          onDownloadDesignDoc={() => {
+            // Download design doc functionality
+          }}
+        />
       </div>
 
       {/* Tabs */}
@@ -166,10 +156,7 @@ export default function ProjectDetailPage() {
         {/* Tab Content */}
         {activeTab === 'notes' && (
           <div className="bg-slate-800 border border-slate-700 rounded-2xl p-6 min-h-96">
-            <h3 className="text-xl font-bold text-white mb-4">Project Notes</h3>
-            <p className="text-slate-400">
-              Project notes will appear here. You can add notes about this project.
-            </p>
+            <NotesTab projectId={project.id} />
           </div>
         )}
 
@@ -240,26 +227,7 @@ export default function ProjectDetailPage() {
         )}
       </div>
 
-        {/* Actions */}
-        <div className="space-y-4">
-          <h2 className="text-2xl font-bold text-white">Actions</h2>
-          <div className="flex gap-4 flex-wrap">
-            <button
-              onClick={() => setEditModalOpen(true)}
-              className="px-6 py-2.5 bg-blue-600 text-white font-medium rounded-full hover:bg-blue-700 transition-colors"
-            >
-              ✏️ Edit Project
-            </button>
-            <button
-              onClick={handleDelete}
-              className="px-6 py-2.5 border border-red-700 text-red-400 font-medium rounded-full hover:bg-red-900/20 transition-colors"
-            >
-              🗑️ Delete Project
-            </button>
-          </div>
-        </div>
-
-       {/* Edit Modal */}
+      {/* Tabs */}
        <EditProjectModal
          isOpen={editModalOpen}
          projectId={project.id}
