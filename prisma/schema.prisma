@@ -97,7 +97,6 @@ model ProjectNote {
   @@index([projectId])
   @@map("project_notes")
 }
-}
 
 // Documentation - Topics (Wiki - Top Level)
 model Topic {
