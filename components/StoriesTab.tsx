@@ -45,8 +45,11 @@ export function StoriesTab({ projectId, designDocContent, onStoriesGenerated }: 
       }
 
       const data = await response.json();
-      setStories(data.stories || []);
-      onStoriesGenerated?.(data.stories);
+      const newStories = data.stories || [];
+
+      // Append new stories instead of replacing
+      setStories([...stories, ...newStories]);
+      onStoriesGenerated?.([...stories, ...newStories]);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
       console.error('Story generation error:', err);
