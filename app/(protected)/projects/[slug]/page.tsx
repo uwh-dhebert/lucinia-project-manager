@@ -25,6 +25,8 @@ export default function ProjectDetailPage() {
   const [error, setError] = useState('')
   const [editModalOpen, setEditModalOpen] = useState(false)
   const [designDocModalOpen, setDesignDocModalOpen] = useState(false)
+  const [activeTab, setActiveTab] = useState<'notes' | 'design-doc' | 'stories'>('notes')
+  const [designDocContent, setDesignDocContent] = useState<string>('')
 
   useEffect(() => {
     loadProject()
@@ -123,38 +125,104 @@ export default function ProjectDetailPage() {
         </div>
       </div>
 
-      {/* Sections */}
+      {/* Tabs */}
       <div className="space-y-6">
-        <h2 className="text-2xl font-bold text-white">Project Resources</h2>
-        <p className="text-slate-400">
-          Documentation and links are managed separately in the Wiki and Links sections for organization across all projects.
-        </p>
+        <div className="flex gap-4 border-b border-slate-700">
+          <button
+            onClick={() => setActiveTab('notes')}
+            className={`px-6 py-3 font-semibold transition-colors ${
+              activeTab === 'notes'
+                ? 'text-blue-400 border-b-2 border-blue-400'
+                : 'text-slate-400 hover:text-slate-300'
+            }`}
+          >
+            📝 Notes
+          </button>
+          <button
+            onClick={() => setActiveTab('design-doc')}
+            className={`px-6 py-3 font-semibold transition-colors ${
+              activeTab === 'design-doc'
+                ? 'text-blue-400 border-b-2 border-blue-400'
+                : 'text-slate-400 hover:text-slate-300'
+            }`}
+          >
+            📄 Design Doc
+          </button>
+          <button
+            onClick={() => setActiveTab('stories')}
+            className={`px-6 py-3 font-semibold transition-colors ${
+              activeTab === 'stories'
+                ? 'text-blue-400 border-b-2 border-blue-400'
+                : 'text-slate-400 hover:text-slate-300'
+            }`}
+          >
+            📖 Stories
+          </button>
+        </div>
+
+        {/* Tab Content */}
+        {activeTab === 'notes' && (
+          <div className="bg-slate-800 border border-slate-700 rounded-2xl p-6 min-h-96">
+            <h3 className="text-xl font-bold text-white mb-4">Project Notes</h3>
+            <p className="text-slate-400">
+              Project notes will appear here. You can add notes about this project.
+            </p>
+          </div>
+        )}
+
+        {activeTab === 'design-doc' && (
+          <div className="bg-slate-800 border border-slate-700 rounded-2xl p-6 min-h-96">
+            {designDocContent ? (
+              <div className="space-y-4">
+                <h3 className="text-xl font-bold text-white">Project Design Document</h3>
+                <div className="bg-slate-900 border border-slate-700 rounded-lg p-4 overflow-auto max-h-64 text-slate-300 text-sm whitespace-pre-wrap font-mono">
+                  {designDocContent}
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <div className="text-4xl mb-4">📄</div>
+                <h3 className="text-lg font-semibold text-white mb-2">No Design Document</h3>
+                <p className="text-slate-400 mb-6">Generate a design document to get started</p>
+                <button
+                  onClick={() => setDesignDocModalOpen(true)}
+                  className="px-6 py-2 bg-gradient-to-r from-purple-600 to-purple-700 text-white font-medium rounded-full hover:from-purple-500 hover:to-purple-600 transition-colors"
+                >
+                  🚀 Generate Design Doc
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'stories' && (
+          <div className="bg-slate-800 border border-slate-700 rounded-2xl p-6 min-h-96">
+            <h3 className="text-xl font-bold text-white mb-4">Project Stories</h3>
+            <p className="text-slate-400">
+              Project stories and epics will appear here. Connect your project to Azure DevOps to sync stories.
+            </p>
+          </div>
+        )}
       </div>
 
-       {/* Actions */}
-       <div className="space-y-4">
-         <h2 className="text-2xl font-bold text-white">Actions</h2>
-         <div className="flex gap-4 flex-wrap">
-           <button
-             onClick={() => setDesignDocModalOpen(true)}
-             className="px-6 py-2.5 bg-gradient-to-r from-purple-600 to-purple-700 text-white font-medium rounded-full hover:from-purple-500 hover:to-purple-600 transition-colors"
-           >
-             📄 Generate Design Doc
-           </button>
-           <button
-             onClick={() => setEditModalOpen(true)}
-             className="px-6 py-2.5 bg-blue-600 text-white font-medium rounded-full hover:bg-blue-700 transition-colors"
-           >
-             ✏️ Edit Project
-           </button>
-           <button
-             onClick={handleDelete}
-             className="px-6 py-2.5 border border-red-700 text-red-400 font-medium rounded-full hover:bg-red-900/20 transition-colors"
-           >
-             🗑️ Delete Project
-           </button>
-         </div>
-       </div>
+        {/* Actions */}
+        <div className="space-y-4">
+          <h2 className="text-2xl font-bold text-white">Actions</h2>
+          <div className="flex gap-4 flex-wrap">
+            <button
+              onClick={() => setEditModalOpen(true)}
+              className="px-6 py-2.5 bg-blue-600 text-white font-medium rounded-full hover:bg-blue-700 transition-colors"
+            >
+              ✏️ Edit Project
+            </button>
+            <button
+              onClick={handleDelete}
+              className="px-6 py-2.5 border border-red-700 text-red-400 font-medium rounded-full hover:bg-red-900/20 transition-colors"
+            >
+              🗑️ Delete Project
+            </button>
+          </div>
+        </div>
 
        {/* Edit Modal */}
        <EditProjectModal
@@ -172,6 +240,11 @@ export default function ProjectDetailPage() {
          onClose={() => setDesignDocModalOpen(false)}
          projectName={project.name}
          projectId={project.id}
+         onSave={async (content) => {
+           setDesignDocContent(content)
+           setDesignDocModalOpen(false)
+           // In a real app, you would save this to the database
+         }}
        />
      </div>
    )

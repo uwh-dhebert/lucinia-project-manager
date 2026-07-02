@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { X, Copy, Download } from 'lucide-react';
+import { X, Copy, Download, Save } from 'lucide-react';
 
 interface DesignDocumentModalProps {
   isOpen: boolean;
   onClose: () => void;
   projectName: string;
   projectId: string;
+  onSave?: (content: string) => Promise<void>;
 }
 
 export function DesignDocumentModal({
@@ -13,11 +14,13 @@ export function DesignDocumentModal({
   onClose,
   projectName,
   projectId,
+  onSave,
 }: DesignDocumentModalProps) {
-  const [document, setDocument] = useState<string>('');
+  const [markdownContent, setMarkdownContent] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isCopied, setIsCopied] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   if (!isOpen) {
     return null;
@@ -26,7 +29,7 @@ export function DesignDocumentModal({
   const handleGenerate = async () => {
     setIsLoading(true);
     setError(null);
-    setDocument('');
+    setMarkdownContent('');
 
     try {
       const response = await fetch(`/api/projects/${projectId}/design-doc`, {
@@ -42,7 +45,7 @@ export function DesignDocumentModal({
       }
 
       const data = await response.json();
-      setDocument(data.document);
+      setMarkdownContent(data.document);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
@@ -51,19 +54,40 @@ export function DesignDocumentModal({
   };
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(document);
+    navigator.clipboard.writeText(markdownContent);
     setIsCopied(true);
     setTimeout(() => setIsCopied(false), 2000);
   };
 
   const handleDownload = () => {
-    const element = document.createElement('a');
-    const file = new Blob([document], { type: 'text/markdown' });
-    element.href = URL.createObjectURL(file);
-    element.download = `${projectName.replace(/\s+/g, '-').toLowerCase()}-design-doc.md`;
-    document.body.appendChild(element);
-    element.click();
-    document.body.removeChild(element);
+    if (typeof window === 'undefined') return;
+
+    try {
+      const element = document.createElement('a');
+      const file = new Blob([markdownContent], { type: 'text/markdown' });
+      element.href = URL.createObjectURL(file);
+      element.download = `${projectName.replace(/\s+/g, '-').toLowerCase()}-design-doc.md`;
+      document.body.appendChild(element);
+      element.click();
+      document.body.removeChild(element);
+      URL.revokeObjectURL(element.href);
+    } catch (err) {
+      console.error('Error downloading file:', err);
+    }
+  };
+
+  const handleSave = async () => {
+    if (!onSave || !markdownContent) return;
+
+    setIsSaving(true);
+    try {
+      await onSave(markdownContent);
+      // Success message could be shown here
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to save document');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -72,7 +96,7 @@ export function DesignDocumentModal({
         {/* Header */}
         <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4 flex justify-between items-center">
           <h3 className="text-xl font-bold text-white">
-            {document ? 'Project Design Document' : 'Generate Design Document'}
+            {markdownContent ? 'Project Design Document' : 'Generate Design Document'}
           </h3>
           <button
             onClick={onClose}
@@ -84,7 +108,7 @@ export function DesignDocumentModal({
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-6">
-          {!document && !isLoading && !error && (
+          {!markdownContent && !isLoading && !error && (
             <div className="text-center py-12">
               <div className="text-5xl mb-4">📄</div>
               <h4 className="text-lg font-semibold text-white mb-2">
@@ -120,17 +144,17 @@ export function DesignDocumentModal({
             </div>
           )}
 
-          {document && (
-            <div className="prose prose-invert max-w-none text-sm">
-              <div className="bg-slate-900 border border-slate-700 rounded-lg p-4 text-slate-300 whitespace-pre-wrap font-mono overflow-auto max-h-64">
-                {document}
+          {markdownContent && (
+            <div className="bg-slate-900 border border-slate-700 rounded-lg p-4 overflow-auto max-h-96">
+              <div className="text-slate-300 text-sm whitespace-pre-wrap font-mono">
+                {markdownContent}
               </div>
             </div>
           )}
         </div>
 
         {/* Footer */}
-        {document && (
+        {markdownContent && (
           <div className="border-t border-slate-700 bg-slate-900 px-6 py-4 flex gap-3">
             <button
               onClick={handleCopy}
@@ -146,10 +170,20 @@ export function DesignDocumentModal({
               <Download size={18} />
               Download as Markdown
             </button>
+            {onSave && (
+              <button
+                onClick={handleSave}
+                disabled={isSaving}
+                className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                <Save size={18} />
+                {isSaving ? 'Saving...' : 'Save to Project'}
+              </button>
+            )}
           </div>
         )}
 
-        {!document && !isLoading && !error && (
+        {!markdownContent && !isLoading && !error && (
           <div className="border-t border-slate-700 bg-slate-900 px-6 py-4">
             <button
               onClick={handleGenerate}
