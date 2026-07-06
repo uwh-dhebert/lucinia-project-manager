@@ -6,7 +6,8 @@
     "dev": "node scripts/dev.mjs",
     "dev:turbo": "next dev",
     "dev:webpack": "node scripts/dev.mjs",
-    "build": "next build",
+    "build": "prisma generate && next build",
+    "postinstall": "prisma generate",
     "start": "next start",
     "lint": "eslint",
     "setup": "prisma db push"
