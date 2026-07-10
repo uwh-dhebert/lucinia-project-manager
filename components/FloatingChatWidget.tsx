@@ -141,16 +141,16 @@ export function FloatingChatWidget() {
     <div className="fixed bottom-6 right-6 z-50">
       {/* Chat Window */}
       {isOpen && (
-        <div className="mb-4 w-96 max-h-96 bg-slate-800 border border-slate-700 rounded-2xl shadow-2xl flex flex-col overflow-hidden">
+        <div className="mb-4 w-96 max-h-96 bg-lucina-white border border-lucina-rose rounded-2xl shadow-2xl flex flex-col overflow-hidden">
           {/* Header */}
-          <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4 flex justify-between items-center">
+          <div className="bg-gradient-to-r from-lucina-rose to-lucina-rose-hover px-6 py-4 flex justify-between items-center">
             <div>
-              <h3 className="text-white font-semibold">Project & Wiki Assistant</h3>
-              <p className="text-blue-100 text-xs">Powered by xAI Grok</p>
+              <h3 className="text-lucina-primary font-semibold">Project & Wiki Assistant</h3>
+              <p className="text-lucina-cream text-xs">Powered by xAI Grok</p>
             </div>
             <button
               onClick={() => setIsOpen(false)}
-              className="text-white hover:bg-blue-500 p-1 rounded"
+              className="text-lucina-primary hover:bg-lucina-rose-hover p-1 rounded"
             >
               <X size={20} />
             </button>
@@ -159,7 +159,7 @@ export function FloatingChatWidget() {
           {/* Messages */}
           <div className="flex-1 overflow-y-auto p-4 space-y-3">
             {messages.length === 0 ? (
-              <div className="text-center text-slate-400 text-sm py-4">
+              <div className="text-center text-lucina-muted text-sm py-4">
                 <p>👋 How can I help you today?</p>
                 <p className="text-xs mt-2">Ask about projects or wiki content</p>
               </div>
@@ -170,8 +170,8 @@ export function FloatingChatWidget() {
                     <div
                       className={`max-w-xs px-3 py-2 rounded-lg text-sm ${
                         msg.role === 'user'
-                          ? 'bg-blue-600 text-white rounded-br-none'
-                          : 'bg-slate-700 text-slate-100 rounded-bl-none'
+                          ? 'bg-lucina-rose text-lucina-primary rounded-br-none'
+                          : 'bg-lucina-surface text-lucina-primary rounded-bl-none'
                       }`}
                     >
                       {msg.content}
@@ -180,11 +180,11 @@ export function FloatingChatWidget() {
                 ))}
                 {isLoading && (
                   <div className="flex justify-start">
-                    <div className="bg-slate-700 text-slate-100 rounded-lg rounded-bl-none px-3 py-2">
+                    <div className="bg-lucina-surface text-lucina-primary rounded-lg rounded-bl-none px-3 py-2">
                       <div className="flex space-x-1">
-                        <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"></div>
-                        <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                        <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
+                        <div className="w-2 h-2 bg-lucina-muted rounded-full animate-bounce"></div>
+                        <div className="w-2 h-2 bg-lucina-muted rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                        <div className="w-2 h-2 bg-lucina-muted rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
                       </div>
                     </div>
                   </div>
@@ -196,13 +196,13 @@ export function FloatingChatWidget() {
 
           {/* Error */}
           {error && (
-            <div className="border-t border-slate-700 bg-red-900/30 border-red-800 p-2">
-              <p className="text-xs text-red-300">{error}</p>
+            <div className="border-t border-lucina-rose bg-red-50 border-red-800 p-2">
+              <p className="text-xs text-red-700">{error}</p>
             </div>
           )}
 
           {/* Input */}
-          <div className="border-t border-slate-700 p-3 bg-slate-900">
+          <div className="border-t border-lucina-rose p-3 bg-lucina-primary">
             <div className="flex gap-2">
               <input
                 type="text"
@@ -210,13 +210,13 @@ export function FloatingChatWidget() {
                 onChange={(e) => setInput(e.target.value)}
                 onKeyPress={handleKeyPress}
                 placeholder="Ask a question..."
-                className="flex-1 px-3 py-2 text-sm border border-slate-600 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-800 text-white placeholder-slate-500 disabled:bg-slate-700"
+                className="flex-1 px-3 py-2 text-sm border border-lucina-rose rounded-full focus:outline-none focus:ring-2 focus:ring-lucina-secondary bg-lucina-white text-lucina-primary placeholder-lucina-muted disabled:bg-lucina-surface"
                 disabled={isLoading}
               />
               <button
                 onClick={handleSendMessage}
                 disabled={isLoading || !input.trim()}
-                className="px-4 py-2 text-sm bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-4 py-2 text-sm bg-lucina-rose text-lucina-primary rounded-full hover:bg-lucina-rose-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 ↑
               </button>
@@ -230,8 +230,8 @@ export function FloatingChatWidget() {
         onClick={() => setIsOpen(!isOpen)}
         className={`w-14 h-14 rounded-full shadow-lg transition-all transform hover:scale-110 flex items-center justify-center ${
           isOpen
-            ? 'bg-slate-700 text-white'
-            : 'bg-gradient-to-br from-blue-600 to-blue-700 text-white hover:from-blue-500 hover:to-blue-600'
+            ? 'bg-lucina-surface text-lucina-primary'
+            : 'bg-gradient-to-br from-lucina-rose to-lucina-rose-hover text-lucina-primary hover:from-lucina-rose-hover hover:to-lucina-secondary'
         }`}
         title={isOpen ? 'Close chat' : 'Open chat'}
       >

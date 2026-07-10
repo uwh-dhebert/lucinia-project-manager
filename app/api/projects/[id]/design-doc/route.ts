@@ -5,6 +5,7 @@
 
 import { createClient } from '@/utils/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
+import { canAccessProject } from '@/lib/project-access';
 
 export async function POST(
   request: NextRequest,
@@ -25,11 +26,18 @@ export async function POST(
     const { id: projectId } = await params;
 
     // Fetch project details
+    const allowed = await canAccessProject(supabase, user.id, projectId);
+    if (!allowed) {
+      return NextResponse.json(
+        { error: 'Project not found' },
+        { status: 404 }
+      );
+    }
+
     const { data: project, error: projectError } = await supabase
       .from('projects')
       .select('*')
       .eq('id', projectId)
-      .eq('ownerId', user.id)
       .single();
 
     if (projectError || !project) {

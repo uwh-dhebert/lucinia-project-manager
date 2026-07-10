@@ -89,7 +89,7 @@ export default function LinksPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-lucina-secondary"></div>
       </div>
     );
   }
@@ -98,25 +98,25 @@ export default function LinksPage() {
     <div className="space-y-8">
       <div className="flex justify-between items-start">
         <div>
-          <h1 className="text-4xl font-bold text-white">Links</h1>
-          <p className="text-slate-400 mt-2">Organize links into groups</p>
+          <h1 className="text-4xl font-bold text-lucina-primary">Links</h1>
+          <p className="text-lucina-muted mt-2">Organize links into groups</p>
         </div>
         <button
           onClick={() => setShowGroupModal(true)}
-          className="px-6 py-2.5 bg-blue-600 text-white font-medium rounded-full hover:bg-blue-700 transition-colors shadow-lg hover:shadow-xl"
+          className="px-6 py-2.5 bg-lucina-rose text-lucina-primary font-medium rounded-full hover:bg-lucina-rose-hover transition-colors shadow-lg hover:shadow-xl"
         >
           + Add Group
         </button>
       </div>
 
       {groups.length === 0 ? (
-        <div className="border-2 border-dashed border-slate-600 rounded-2xl p-12 text-center">
+        <div className="border-2 border-dashed border-lucina-rose rounded-2xl p-12 text-center">
           <div className="text-5xl mb-4">🔗</div>
-          <h2 className="text-2xl font-bold text-white mb-2">No groups yet</h2>
-          <p className="text-slate-400 mb-6">Create your first group and start adding links.</p>
+          <h2 className="text-2xl font-bold text-lucina-primary mb-2">No groups yet</h2>
+          <p className="text-lucina-muted mb-6">Create your first group and start adding links.</p>
           <button
             onClick={() => setShowGroupModal(true)}
-            className="inline-block px-6 py-3 bg-blue-600 text-white font-medium rounded-full hover:bg-blue-700 transition-colors shadow-lg hover:shadow-xl"
+            className="inline-block px-6 py-3 bg-lucina-rose text-lucina-primary font-medium rounded-full hover:bg-lucina-rose-hover transition-colors shadow-lg hover:shadow-xl"
           >
             Create First Group
           </button>
@@ -124,23 +124,23 @@ export default function LinksPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {groups.map((group) => (
-            <div key={group.id} className="border border-slate-700 rounded-2xl overflow-hidden bg-slate-800 flex flex-col h-full">
-              <div className="p-4 border-b border-slate-700 flex justify-between items-start">
-                <h2 className="text-lg font-bold text-white">{group.name}</h2>
+            <div key={group.id} className="border border-lucina-rose rounded-2xl overflow-hidden bg-lucina-white flex flex-col h-full">
+              <div className="p-4 border-b border-lucina-rose flex justify-between items-start">
+                <h2 className="text-lg font-bold text-lucina-primary">{group.name}</h2>
                 <div className="flex gap-1 flex-shrink-0">
                   <button
                     onClick={() => {
                       setSelectedGroupId(group.id);
                       setShowLinkModal(true);
                     }}
-                    className="p-1.5 text-green-400 hover:text-green-300 hover:bg-green-900/30 rounded transition-colors"
+                    className="p-1.5 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 rounded transition-colors"
                     title="Add link"
                   >
                     ➕
                   </button>
                   <button
                     onClick={() => handleDeleteGroup(group.id)}
-                    className="p-1.5 text-red-400 hover:text-red-300 hover:bg-red-900/30 rounded transition-colors"
+                    className="p-1.5 text-red-600 hover:text-red-700 hover:bg-red-50 rounded transition-colors"
                     title="Delete group"
                   >
                     🗑️
@@ -149,28 +149,28 @@ export default function LinksPage() {
               </div>
 
               {group.links.length === 0 ? (
-                <div className="p-4 text-center text-slate-400 flex-1 flex items-center justify-center">
+                <div className="p-4 text-center text-lucina-muted flex-1 flex items-center justify-center">
                   <p className="text-sm">No links yet</p>
                 </div>
               ) : (
                 <div className="flex-1 overflow-y-auto">
-                  <div className="divide-y divide-slate-700">
+                  <div className="divide-y divide-lucina-rose">
                     {group.links.map((link) => (
-                    <div key={link.id} className="p-3 hover:bg-slate-700 transition-colors group/link flex items-start justify-between gap-2">
+                    <div key={link.id} className="p-3 hover:bg-lucina-surface transition-colors group/link flex items-start justify-between gap-2">
                         <a
                           href={link.url}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="flex-1 min-w-0"
                         >
-                          <h3 className="text-sm font-semibold text-blue-400 hover:text-blue-300 transition-colors truncate">
+                          <h3 className="text-sm font-semibold text-lucina-secondary hover:text-lucina-secondary transition-colors truncate">
                             {link.title}
                           </h3>
-                          <p className="text-xs text-slate-400 truncate mt-0.5">{link.url}</p>
+                          <p className="text-xs text-lucina-muted truncate mt-0.5">{link.url}</p>
                         </a>
                         <button
                           onClick={() => handleDeleteLink(group.id, link.id)}
-                          className="flex-shrink-0 p-1.5 text-red-400 hover:text-red-300 hover:bg-red-900/30 rounded transition-colors"
+                          className="flex-shrink-0 p-1.5 text-red-600 hover:text-red-700 hover:bg-red-50 rounded transition-colors"
                           title="Delete link"
                         >
                           🗑️

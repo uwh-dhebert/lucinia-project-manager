@@ -1,10 +1,10 @@
 'use client';
 
-import { Home, FolderOpen, Sparkles, Users, Settings, Menu } from 'lucide-react';
+import { Home, FolderOpen, Sparkles } from 'lucide-react';
 import { usePathname } from 'next/navigation';
-import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
-import { Button } from '@/components/ui/button';
+import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { WikiSidebar } from '@/components/WikiSidebar';
+import { LucinaLogo } from '@/components/brand/LucinaLogo';
 
 export function AppSidebar() {
   const pathname = usePathname();
@@ -12,14 +12,8 @@ export function AppSidebar() {
   return (
     <Sidebar>
       <SidebarContent>
-        <div className="flex items-center gap-3 px-6 py-8 border-b border-lucina-muted/30">
-          <div className="w-10 h-10 bg-gradient-to-br from-violet-600 to-purple-600 rounded-2xl flex items-center justify-center">
-            <span className="text-white text-3xl font-serif">L</span>
-          </div>
-          <div>
-            <h1 className="text-3xl font-serif tracking-tight text-white">lucina</h1>
-            <p className="text-xs text-lucina-muted">Project Manager</p>
-          </div>
+        <div className="flex items-center gap-3 px-6 py-8 border-b border-lucina-rose">
+          <LucinaLogo href="/dashboard" width={120} height={36} />
         </div>
 
         <SidebarGroup>
@@ -53,10 +47,9 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* Wiki Tree Navigation - Only on wiki pages */}
         {isWikiPage && (
           <>
-            <div className="border-t border-slate-700 my-2" />
+            <div className="border-t border-lucina-rose my-2" />
             <WikiSidebar />
           </>
         )}

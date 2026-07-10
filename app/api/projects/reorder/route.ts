@@ -1,8 +1,9 @@
 import { createClient } from '@/utils/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
 import { sortProjectsForPriorities, type PriorityZone } from '@/lib/project-priorities';
+import { canAccessProject, getAccessibleProjects } from '@/lib/project-access';
 
-const VALID_ZONES: PriorityZone[] = ['active', 'prioritized', 'in_design'];
+const VALID_ZONES: PriorityZone[] = ['active', 'prioritized', 'in_design', 'completed'];
 
 interface ReorderItem {
   id: string;
@@ -32,6 +33,13 @@ export async function PUT(request: NextRequest) {
       }
     }
 
+    for (const item of items) {
+      const allowed = await canAccessProject(supabase, user.id, item.id);
+      if (!allowed) {
+        return NextResponse.json({ error: 'Unauthorized to update one or more projects' }, { status: 403 });
+      }
+    }
+
     const now = new Date().toISOString();
 
     const results = await Promise.all(
@@ -44,7 +52,6 @@ export async function PUT(request: NextRequest) {
             updatedAt: now,
           })
           .eq('id', item.id)
-          .eq('ownerId', user.id)
       )
     );
 
@@ -53,16 +60,8 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: failed.error.message }, { status: 500 });
     }
 
-    const { data: projects, error } = await supabase
-      .from('projects')
-      .select('*')
-      .eq('ownerId', user.id);
-
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
-
-    return NextResponse.json(sortProjectsForPriorities(projects ?? []));
+    const projects = await getAccessibleProjects(supabase, user.id);
+    return NextResponse.json(sortProjectsForPriorities(projects));
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json({ error: message }, { status: 500 });

@@ -68,8 +68,8 @@ export function MarkdownEditor({
   ];
 
   return (
-    <div className="overflow-hidden rounded-lg border border-slate-600 bg-slate-800">
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-600 bg-slate-900/60 px-3 py-2">
+    <div className="overflow-hidden rounded-lg border border-lucina-rose bg-lucina-white">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-lucina-rose bg-lucina-primary/60 px-3 py-2">
         <div className="flex flex-wrap gap-1">
           {TOOLBAR_ACTIONS.map((action) => (
             <button
@@ -77,14 +77,14 @@ export function MarkdownEditor({
               type="button"
               onClick={() => applyFormatting(action)}
               title={action.label}
-              className="rounded-md p-1.5 text-slate-400 hover:bg-slate-700 hover:text-white transition-colors"
+              className="rounded-md p-1.5 text-lucina-muted hover:bg-lucina-surface hover:text-lucina-primary transition-colors"
             >
               {action.icon}
             </button>
           ))}
         </div>
 
-        <div className="flex rounded-lg border border-slate-600 p-0.5">
+        <div className="flex rounded-lg border border-lucina-rose p-0.5">
           {tabs.map((item) => (
             <button
               key={item.id}
@@ -92,8 +92,8 @@ export function MarkdownEditor({
               onClick={() => setTab(item.id)}
               className={`flex items-center gap-1 rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
                 tab === item.id
-                  ? 'bg-blue-600 text-white'
-                  : 'text-slate-400 hover:text-white'
+                  ? 'bg-lucina-rose text-lucina-primary'
+                  : 'text-lucina-muted hover:text-lucina-primary'
               }`}
             >
               {item.icon}
@@ -110,7 +110,7 @@ export function MarkdownEditor({
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
           rows={minRows}
-          className="w-full resize-y bg-slate-800 px-4 py-3 font-mono text-sm text-white placeholder-slate-500 focus:outline-none"
+          className="w-full resize-y bg-lucina-white px-4 py-3 font-mono text-sm text-lucina-primary placeholder-lucina-muted focus:outline-none"
         />
       )}
 
@@ -128,7 +128,7 @@ export function MarkdownEditor({
             onChange={(e) => onChange(e.target.value)}
             placeholder={placeholder}
             rows={minRows}
-            className="w-full resize-y border-b border-slate-600 bg-slate-800 px-4 py-3 font-mono text-sm text-white placeholder-slate-500 focus:outline-none lg:border-b-0 lg:border-r"
+            className="w-full resize-y border-b border-lucina-rose bg-lucina-white px-4 py-3 font-mono text-sm text-lucina-primary placeholder-lucina-muted focus:outline-none lg:border-b-0 lg:border-r"
           />
           <div className="px-4 py-3 lg:max-h-[360px] lg:overflow-y-auto">
             <MarkdownRenderer content={value} />

@@ -67,9 +67,9 @@ function LoginForm() {
       title="Welcome back"
       subtitle="Sign in to your account to continue"
       footer={
-        <p className="text-center text-slate-400 text-sm">
+        <p className="text-center text-lucina-muted text-sm">
           Don&apos;t have an account?{' '}
-          <Link href="/auth/register" className="text-blue-400 font-semibold hover:text-blue-300 transition-colors">
+          <Link href="/auth/register" className="text-lucina-secondary font-semibold hover:text-lucina-secondary transition-colors">
             Sign up
           </Link>
         </p>
@@ -77,7 +77,7 @@ function LoginForm() {
     >
       <form onSubmit={handleSubmit} className="space-y-5">
         <div>
-          <label htmlFor="email" className="block text-sm font-semibold text-slate-200 mb-2">
+          <label htmlFor="email" className="block text-sm font-semibold text-lucina-primary mb-2">
             Email address
           </label>
           <input
@@ -87,19 +87,19 @@ function LoginForm() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="you@example.com"
-            className="w-full px-4 py-3 border border-slate-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-slate-700/80 text-white placeholder-slate-500 transition-all"
+            className="w-full px-4 py-3 border border-lucina-rose rounded-xl focus:outline-none focus:ring-2 focus:ring-lucina-secondary focus:border-transparent bg-lucina-white text-lucina-primary placeholder-lucina-muted transition-all"
             disabled={loading}
           />
         </div>
 
         <div>
           <div className="flex items-center justify-between mb-2">
-            <label htmlFor="password" className="block text-sm font-semibold text-slate-200">
+            <label htmlFor="password" className="block text-sm font-semibold text-lucina-primary">
               Password
             </label>
             <Link
               href="/auth/forgot-password"
-              className="text-sm text-blue-400 hover:text-blue-300 transition-colors"
+              className="text-sm text-lucina-secondary hover:text-lucina-secondary transition-colors"
             >
               Forgot password?
             </Link>
@@ -111,7 +111,7 @@ function LoginForm() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="••••••••"
-            className="w-full px-4 py-3 border border-slate-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-slate-700/80 text-white placeholder-slate-500 transition-all"
+            className="w-full px-4 py-3 border border-lucina-rose rounded-xl focus:outline-none focus:ring-2 focus:ring-lucina-secondary focus:border-transparent bg-lucina-white text-lucina-primary placeholder-lucina-muted transition-all"
             disabled={loading}
           />
         </div>
@@ -122,11 +122,11 @@ function LoginForm() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-full hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:scale-[1.02] active:scale-[0.98]"
+          className="w-full py-3 btn-lucina transition-all disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {loading ? (
             <span className="flex items-center justify-center gap-2">
-              <span className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
+              <span className="animate-spin rounded-full h-4 w-4 border-2 border-lucina-cream border-t-transparent" />
               Signing in...
             </span>
           ) : (
@@ -141,7 +141,7 @@ function LoginForm() {
 export default function LoginPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center text-slate-400">
+      <div className="min-h-screen bg-lucina-accent flex items-center justify-center text-lucina-muted">
         Loading...
       </div>
     }>

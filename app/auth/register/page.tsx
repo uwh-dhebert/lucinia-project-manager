@@ -2,13 +2,11 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { createClient } from '@/utils/supabase/client';
 import { AuthShell } from '@/components/auth/AuthShell';
 import { AuthAlert } from '@/components/auth/AuthAlert';
+import { getSignupEmailError } from '@/lib/auth-email';
 
 export default function RegisterPage() {
-  const router = useRouter();
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -27,6 +25,12 @@ export default function RegisterPage() {
       return;
     }
 
+    const emailError = getSignupEmailError(email);
+    if (emailError) {
+      setError(emailError);
+      return;
+    }
+
     if (password.length < 8) {
       setError('Password must be at least 8 characters.');
       return;
@@ -40,33 +44,24 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      const supabase = createClient();
-      const { data, error: signUpError } = await supabase.auth.signUp({
-        email: email.trim(),
-        password,
-        options: {
-          data: { full_name: fullName.trim() },
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
-        },
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fullName: fullName.trim(),
+          email: email.trim(),
+          password,
+        }),
       });
 
-      if (signUpError) {
-        setError(signUpError.message);
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.error || 'Registration failed.');
         return;
       }
 
-      if (data.user?.identities?.length === 0) {
-        setError('An account with this email already exists. Try signing in instead.');
-        return;
-      }
-
-      if (data.session) {
-        router.push('/dashboard');
-        router.refresh();
-        return;
-      }
-
-      setSuccess('Check your email for a confirmation link, then sign in.');
+      setSuccess(data.message || 'Check your email for a confirmation link, then sign in.');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unexpected error occurred.');
     } finally {
@@ -77,11 +72,11 @@ export default function RegisterPage() {
   return (
     <AuthShell
       title="Create your account"
-      subtitle="Start organizing projects with Lucina"
+      subtitle="Lucina team members only — use your @lucina.com email"
       footer={
-        <p className="text-center text-slate-400 text-sm">
+        <p className="text-center text-lucina-muted text-sm">
           Already have an account?{' '}
-          <Link href="/auth/login" className="text-blue-400 font-semibold hover:text-blue-300 transition-colors">
+          <Link href="/auth/login" className="text-lucina-secondary font-semibold hover:text-lucina-secondary transition-colors">
             Sign in
           </Link>
         </p>
@@ -89,7 +84,7 @@ export default function RegisterPage() {
     >
       <form onSubmit={handleSubmit} className="space-y-5">
         <div>
-          <label htmlFor="fullName" className="block text-sm font-semibold text-slate-200 mb-2">
+          <label htmlFor="fullName" className="block text-sm font-semibold text-lucina-primary mb-2">
             Full name
           </label>
           <input
@@ -99,13 +94,13 @@ export default function RegisterPage() {
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
             placeholder="Jane Doe"
-            className="w-full px-4 py-3 border border-slate-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-slate-700/80 text-white placeholder-slate-500 transition-all"
+            className="w-full px-4 py-3 border border-lucina-rose rounded-xl focus:outline-none focus:ring-2 focus:ring-lucina-secondary focus:border-transparent bg-lucina-white text-lucina-primary placeholder-lucina-muted transition-all"
             disabled={loading}
           />
         </div>
 
         <div>
-          <label htmlFor="email" className="block text-sm font-semibold text-slate-200 mb-2">
+          <label htmlFor="email" className="block text-sm font-semibold text-lucina-primary mb-2">
             Email address
           </label>
           <input
@@ -114,14 +109,14 @@ export default function RegisterPage() {
             autoComplete="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="you@example.com"
-            className="w-full px-4 py-3 border border-slate-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-slate-700/80 text-white placeholder-slate-500 transition-all"
+            placeholder="you@lucina.com"
+            className="w-full px-4 py-3 border border-lucina-rose rounded-xl focus:outline-none focus:ring-2 focus:ring-lucina-secondary focus:border-transparent bg-lucina-white text-lucina-primary placeholder-lucina-muted transition-all"
             disabled={loading}
           />
         </div>
 
         <div>
-          <label htmlFor="password" className="block text-sm font-semibold text-slate-200 mb-2">
+          <label htmlFor="password" className="block text-sm font-semibold text-lucina-primary mb-2">
             Password
           </label>
           <input
@@ -131,13 +126,13 @@ export default function RegisterPage() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="At least 8 characters"
-            className="w-full px-4 py-3 border border-slate-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-slate-700/80 text-white placeholder-slate-500 transition-all"
+            className="w-full px-4 py-3 border border-lucina-rose rounded-xl focus:outline-none focus:ring-2 focus:ring-lucina-secondary focus:border-transparent bg-lucina-white text-lucina-primary placeholder-lucina-muted transition-all"
             disabled={loading}
           />
         </div>
 
         <div>
-          <label htmlFor="confirmPassword" className="block text-sm font-semibold text-slate-200 mb-2">
+          <label htmlFor="confirmPassword" className="block text-sm font-semibold text-lucina-primary mb-2">
             Confirm password
           </label>
           <input
@@ -147,7 +142,7 @@ export default function RegisterPage() {
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             placeholder="Repeat your password"
-            className="w-full px-4 py-3 border border-slate-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-slate-700/80 text-white placeholder-slate-500 transition-all"
+            className="w-full px-4 py-3 border border-lucina-rose rounded-xl focus:outline-none focus:ring-2 focus:ring-lucina-secondary focus:border-transparent bg-lucina-white text-lucina-primary placeholder-lucina-muted transition-all"
             disabled={loading}
           />
         </div>
@@ -158,11 +153,11 @@ export default function RegisterPage() {
         <button
           type="submit"
           disabled={loading || !!success}
-          className="w-full py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-full hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:scale-[1.02] active:scale-[0.98]"
+          className="w-full py-3 btn-lucina transition-all disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {loading ? (
             <span className="flex items-center justify-center gap-2">
-              <span className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
+              <span className="animate-spin rounded-full h-4 w-4 border-2 border-lucina-cream border-t-transparent" />
               Creating account...
             </span>
           ) : (

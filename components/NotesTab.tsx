@@ -124,11 +124,11 @@ export function NotesTab({ projectId }: NotesTabProps) {
 
   return (
     <div className="space-y-6">
-      <div className="bg-slate-700 border border-slate-600 rounded-lg p-4">
+      <div className="bg-lucina-surface border border-lucina-rose rounded-lg p-4">
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-medium text-slate-200">New Note</h3>
-            <span className="text-xs text-slate-500">Markdown supported</span>
+            <h3 className="text-sm font-medium text-lucina-primary">New Note</h3>
+            <span className="text-xs text-lucina-muted">Markdown supported</span>
           </div>
           <MarkdownEditor
             value={newNoteText}
@@ -136,11 +136,11 @@ export function NotesTab({ projectId }: NotesTabProps) {
             placeholder="Write a note in markdown..."
             minRows={5}
           />
-          {error && <p className="text-red-400 text-sm">{error}</p>}
+          {error && <p className="text-red-600 text-sm">{error}</p>}
           <div className="flex justify-end">
             <button
               onClick={handleAddNote}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+              className="px-4 py-2 bg-lucina-rose text-lucina-primary rounded-lg hover:bg-lucina-rose-hover transition-colors flex items-center gap-2"
             >
               <Plus size={18} />
               Add Note
@@ -152,17 +152,17 @@ export function NotesTab({ projectId }: NotesTabProps) {
       <div className="space-y-3">
         {isLoading ? (
           <div className="text-center py-8">
-            <p className="text-slate-400">Loading notes...</p>
+            <p className="text-lucina-muted">Loading notes...</p>
           </div>
         ) : notes.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-slate-400">No notes yet. Create one to get started!</p>
+            <p className="text-lucina-muted">No notes yet. Create one to get started!</p>
           </div>
         ) : (
           notes.map((note) => (
             <div
               key={note.id}
-              className="bg-slate-700 border border-slate-600 rounded-lg p-4"
+              className="bg-lucina-surface border border-lucina-rose rounded-lg p-4"
             >
               {editingId === note.id ? (
                 <div className="space-y-3">
@@ -175,7 +175,7 @@ export function NotesTab({ projectId }: NotesTabProps) {
                   <div className="flex gap-2 justify-end">
                     <button
                       onClick={() => handleUpdateNote(note.id)}
-                      className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 transition-colors flex items-center gap-1"
+                      className="px-3 py-1 bg-green-600 text-lucina-primary rounded hover:bg-green-700 transition-colors flex items-center gap-1"
                     >
                       <Check size={16} />
                       Save
@@ -185,7 +185,7 @@ export function NotesTab({ projectId }: NotesTabProps) {
                         setEditingId(null);
                         setEditText('');
                       }}
-                      className="px-3 py-1 bg-slate-600 text-white rounded hover:bg-slate-500 transition-colors flex items-center gap-1"
+                      className="px-3 py-1 bg-lucina-rose text-lucina-primary rounded hover:bg-lucina-rose-hover transition-colors flex items-center gap-1"
                     >
                       <X size={16} />
                       Cancel
@@ -195,8 +195,8 @@ export function NotesTab({ projectId }: NotesTabProps) {
               ) : (
                 <div className="space-y-3">
                   <MarkdownRenderer content={note.content} />
-                  <div className="flex justify-between items-center border-t border-slate-600 pt-3">
-                    <p className="text-xs text-slate-400">
+                  <div className="flex justify-between items-center border-t border-lucina-rose pt-3">
+                    <p className="text-xs text-lucina-muted">
                       {new Date(note.updatedAt || note.createdAt).toLocaleDateString()} at{' '}
                       {new Date(note.updatedAt || note.createdAt).toLocaleTimeString([], {
                         hour: '2-digit',
@@ -206,14 +206,14 @@ export function NotesTab({ projectId }: NotesTabProps) {
                     <div className="flex gap-2">
                       <button
                         onClick={() => handleStartEdit(note)}
-                        className="p-1 text-slate-400 hover:text-blue-400 transition-colors"
+                        className="p-1 text-lucina-muted hover:text-lucina-secondary transition-colors"
                         title="Edit note"
                       >
                         <Edit2 size={16} />
                       </button>
                       <button
                         onClick={() => handleDeleteNote(note.id)}
-                        className="p-1 text-slate-400 hover:text-red-400 transition-colors"
+                        className="p-1 text-lucina-muted hover:text-red-600 transition-colors"
                         title="Delete note"
                       >
                         <Trash2 size={16} />

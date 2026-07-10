@@ -1,13 +1,13 @@
 /**
  * Application Layer - Chat Use Case
  * Handles chat message processing with Grok AI
- * Restricted to project and wiki content only - with full RAG
+ * Restricted to user's accessible projects, wiki, and links
  */
 
 import { randomUUID } from 'crypto';
-import { ChatMessage, ChatMessageId } from '@/domain/chat/entities/ChatMessage';
 import { IGrokService } from '@/infrastructure/external';
 import { createClient } from '@/utils/supabase/server';
+import { getAccessibleProjects } from '@/lib/project-access';
 
 export interface ChatUseCaseRequest {
   userId: string;
@@ -31,9 +31,9 @@ export interface ChatUseCaseResponse {
 }
 
 interface UserContext {
-  projects: Array<{ id: string; name: string; description?: string; slug?: string }>;
-  wikiTopics: Array<{ id: string; title: string; subjects?: Array<{ id: string; title: string; contentItems?: Array<{ title?: string; content: string }> }> }>;
-  links: Array<{ id: string; title: string; url: string; description?: string }>;
+  projects: Array<{ id: string; name: string; description?: string; slug?: string; isOwner?: boolean }>;
+  wikiTopics: Array<{ id: string; title: string; slug?: string; subjects?: Array<{ id: string; title: string; contentItems?: Array<{ title?: string; content: string }> }> }>;
+  links: Array<{ id: string; title: string; url: string; groupName?: string }>;
   summary: string;
 }
 
@@ -42,37 +42,22 @@ export class ChatUseCase {
 
   async execute(request: ChatUseCaseRequest): Promise<ChatUseCaseResponse> {
     const messageId = randomUUID();
-
-    // Load comprehensive user context
     const userContext = await this.loadUserContext(request.userId);
-
-    // Check if question is relevant to available content
     const isRelevant = this.isQuestionRelevant(request.userMessage, userContext);
 
     if (!isRelevant && userContext.summary) {
-      // If question is off-topic, return restricted response
       return {
         messageId,
         conversationId: request.conversationId,
         userMessage: request.userMessage,
-        assistantMessage: `I can only help with questions about your projects and wiki content. I don't have information about "${request.userMessage}".\n\nHere's what I can help you with:\n${userContext.summary}`,
+        assistantMessage: `I can only help with questions about your projects, wiki content, and saved links. I don't have information about "${request.userMessage}".\n\nHere's what I can help you with:\n${userContext.summary}`,
         tokensUsed: { prompt: 0, completion: 0 },
         model: 'grok-4-1-fast-non-reasoning',
       };
     }
 
-    // Build context documents from projects and wiki
     const contextDocs = this.buildContextDocuments(userContext);
-
-    // Build messages array with user message
-    const messages = [
-      {
-        role: 'user' as const,
-        content: request.userMessage,
-      },
-    ];
-
-    // Prepare Grok request with full context
+    const messages = [{ role: 'user' as const, content: request.userMessage }];
     const grokRequest = {
       messages,
       temperature: 0.7,
@@ -80,11 +65,7 @@ export class ChatUseCase {
       systemPrompt: this.buildSystemPrompt(userContext, contextDocs, request.pageContext),
     };
 
-    // Call Grok service with RAG
-    const grokResponse = await this.grokService.ragChat(
-      grokRequest,
-      contextDocs
-    );
+    const grokResponse = await this.grokService.ragChat(grokRequest, contextDocs);
 
     return {
       messageId,
@@ -100,84 +81,70 @@ export class ChatUseCase {
     try {
       const supabase = await createClient();
 
-      // Fetch user's projects with details
-      const { data: projects } = await supabase
-        .from('projects')
-        .select('id, name, description, slug')
-        .eq('ownerId', userId)
+      const accessibleProjects = await getAccessibleProjects(supabase, userId);
+      const projects = accessibleProjects.map((p) => ({
+        id: p.id,
+        name: p.name,
+        description: p.description ?? undefined,
+        slug: p.slug,
+        isOwner: p.isOwner,
+      }));
+
+      const { data: topics } = await supabase
+        .from('topics')
+        .select('id, title, slug, subjects(id, title, slug, content_items(id, title, content))')
+        .order('order', { ascending: true })
         .limit(100);
 
-      // Fetch user's wiki structure (topics, subjects, content items)
-      const { data: wikiTopics } = await supabase
-        .from('wiki_topics')
-        .select('id, title')
+      const enrichedWikiTopics: UserContext['wikiTopics'] = (topics ?? []).map((topic) => ({
+        id: topic.id,
+        title: topic.title,
+        slug: topic.slug,
+        subjects: ((topic.subjects as Array<{
+          id: string;
+          title: string;
+          content_items?: Array<{ title?: string; content: string }>;
+        }>) ?? []).map((subject) => ({
+          id: subject.id,
+          title: subject.title,
+          contentItems: subject.content_items ?? [],
+        })),
+      }));
+
+      const { data: linkGroups } = await supabase
+        .from('link_groups')
+        .select('id, name, links(id, title, url)')
         .eq('userId', userId)
         .limit(100);
 
-      let enrichedWikiTopics: UserContext['wikiTopics'] = [];
-
-      // For each wiki topic, fetch subjects and content
-      if (wikiTopics && wikiTopics.length > 0) {
-        for (const topic of wikiTopics) {
-          const { data: subjects } = await supabase
-            .from('wiki_subjects')
-            .select('id, title')
-            .eq('topicId', topic.id)
-            .limit(50);
-
-          let enrichedSubjects: any[] = [];
-          if (subjects && subjects.length > 0) {
-            for (const subject of subjects) {
-              const { data: contentItems } = await supabase
-                .from('wiki_content_items')
-                .select('title, content')
-                .eq('subjectId', subject.id)
-                .limit(100);
-
-              enrichedSubjects.push({
-                id: subject.id,
-                title: subject.title,
-                contentItems: contentItems || [],
-              });
-            }
-          }
-
-          enrichedWikiTopics.push({
-            id: topic.id,
-            title: topic.title,
-            subjects: enrichedSubjects,
+      const links: UserContext['links'] = [];
+      for (const group of linkGroups ?? []) {
+        for (const link of (group.links as Array<{ id: string; title: string; url: string }>) ?? []) {
+          links.push({
+            id: link.id,
+            title: link.title,
+            url: link.url,
+            groupName: group.name,
           });
         }
       }
 
-      // Fetch user's links
-      const { data: links } = await supabase
-        .from('links')
-        .select('id, title, url, description')
-        .eq('userId', userId)
-        .limit(100);
-
-      // Build summary
       let summary = '';
-      const projectCount = projects?.length || 0;
-      const topicCount = wikiTopics?.length || 0;
-      const linkCount = links?.length || 0;
-
-      if (projectCount > 0) {
-        summary += `📊 **Projects** (${projectCount}): ${(projects || []).map(p => p.name).join(', ')}\n`;
+      if (projects.length > 0) {
+        summary += `📊 **Projects** (${projects.length}): ${projects.map((p) => p.name).join(', ')}\n`;
       }
-      if (topicCount > 0) {
-        summary += `📚 **Wiki Topics** (${topicCount}): ${(wikiTopics || []).map(t => t.title).join(', ')}\n`;
+      if (enrichedWikiTopics.length > 0) {
+        summary += `📚 **Wiki Topics** (${enrichedWikiTopics.length}): ${enrichedWikiTopics.map((t) => t.title).join(', ')}\n`;
       }
-      if (linkCount > 0) {
-        summary += `🔗 **Links** (${linkCount}): You have ${linkCount} saved links\n`;
+      if (links.length > 0) {
+        summary += `🔗 **Links** (${links.length}): ${links.map((l) => l.title).join(', ')}\n`;
       }
 
       return {
-        projects: projects || [],
+        projects,
         wikiTopics: enrichedWikiTopics,
-        links: links || [],
-        summary: summary || 'No projects or wiki content yet.',
+        links,
+        summary: summary || 'No projects, wiki content, or links available yet.',
       };
     } catch (error) {
       console.error('Error loading user context:', error);
@@ -185,7 +152,7 @@ export class ChatUseCase {
         projects: [],
         wikiTopics: [],
         links: [],
-        summary: 'I can help you with your projects and wiki content.',
+        summary: 'I can help you with your projects, wiki content, and saved links.',
       };
     }
   }
@@ -193,26 +160,24 @@ export class ChatUseCase {
   private buildContextDocuments(context: UserContext): string[] {
     const docs: string[] = [];
 
-    // Add project information
     if (context.projects.length > 0) {
-      context.projects.forEach(project => {
-        const doc = `PROJECT: ${project.name}
+      context.projects.forEach((project) => {
+        docs.push(`PROJECT: ${project.name}
 Slug: ${project.slug || 'N/A'}
+Access: ${project.isOwner ? 'Owner' : 'Shared with you'}
 ${project.description ? `Description: ${project.description}` : ''}
----`;
-        docs.push(doc);
+---`);
       });
     }
 
-    // Add wiki information
     if (context.wikiTopics.length > 0) {
-      context.wikiTopics.forEach(topic => {
+      context.wikiTopics.forEach((topic) => {
         let topicDoc = `WIKI TOPIC: ${topic.title}\n`;
         if (topic.subjects && topic.subjects.length > 0) {
-          topic.subjects.forEach(subject => {
+          topic.subjects.forEach((subject) => {
             topicDoc += `\nSUBJECT: ${subject.title}\n`;
             if (subject.contentItems && subject.contentItems.length > 0) {
-              subject.contentItems.forEach(item => {
+              subject.contentItems.forEach((item) => {
                 topicDoc += `${item.title ? `- ${item.title}: ` : ''}${item.content.substring(0, 500)}...\n`;
               });
             }
@@ -223,136 +188,111 @@ ${project.description ? `Description: ${project.description}` : ''}
       });
     }
 
-    // Add links information
     if (context.links.length > 0) {
       let linksDoc = 'SAVED LINKS:\n';
-      context.links.forEach(link => {
-        linksDoc += `- [${link.title}](${link.url})${link.description ? `: ${link.description}` : ''}\n`;
+      context.links.forEach((link) => {
+        linksDoc += `- [${link.title}](${link.url})${link.groupName ? ` (${link.groupName})` : ''}\n`;
       });
       linksDoc += '---';
       docs.push(linksDoc);
     }
 
-    return docs.length > 0 ? docs : ['No project or wiki content available'];
+    return docs.length > 0 ? docs : ['No accessible content available'];
   }
 
   private isQuestionRelevant(question: string, context: UserContext): boolean {
     const lowerQuestion = question.toLowerCase();
 
-    // Check for project management related keywords
     const projectKeywords = [
       'project', 'task', 'work', 'deadline', 'assignee', 'status', 'progress',
       'create', 'update', 'delete', 'manage', 'plan', 'schedule', 'timeline',
-      'project name', 'project details', 'project description',
+      'completed', 'active', 'prioritized',
     ];
-
-    // Check for wiki/documentation keywords
     const wikiKeywords = [
       'wiki', 'documentation', 'document', 'subject', 'topic', 'content', 'write',
-      'edit', 'page', 'section', 'note', 'reference', 'guide', 'tutorial', 'wiki topic',
+      'edit', 'page', 'section', 'note', 'reference', 'guide', 'tutorial',
     ];
+    const linkKeywords = ['link', 'url', 'website', 'web', 'resource', 'bookmark'];
 
-    // Check for link-related keywords
-    const linkKeywords = [
-      'link', 'url', 'website', 'web', 'resource', 'reference',
-    ];
+    const hasProjectKeyword = projectKeywords.some((keyword) => lowerQuestion.includes(keyword));
+    const hasWikiKeyword = wikiKeywords.some((keyword) => lowerQuestion.includes(keyword));
+    const hasLinkKeyword = linkKeywords.some((keyword) => lowerQuestion.includes(keyword));
 
-    // Check if question contains relevant keywords
-    const hasProjectKeyword = projectKeywords.some(keyword => lowerQuestion.includes(keyword));
-    const hasWikiKeyword = wikiKeywords.some(keyword => lowerQuestion.includes(keyword));
-    const hasLinkKeyword = linkKeywords.some(keyword => lowerQuestion.includes(keyword));
-
-    // Check if question mentions any of the user's content
     const mentionsUserContent =
-      context.projects.some(p => lowerQuestion.includes(p.name.toLowerCase())) ||
-      context.wikiTopics.some(t => lowerQuestion.includes(t.title.toLowerCase())) ||
-      context.links.some(l => lowerQuestion.includes(l.title.toLowerCase())) ||
+      context.projects.some((p) => lowerQuestion.includes(p.name.toLowerCase())) ||
+      context.wikiTopics.some((t) => lowerQuestion.includes(t.title.toLowerCase())) ||
+      context.links.some((l) => lowerQuestion.includes(l.title.toLowerCase())) ||
       lowerQuestion.includes('my project') ||
       lowerQuestion.includes('my wiki') ||
-      lowerQuestion.includes('my content');
+      lowerQuestion.includes('my link');
 
     return hasProjectKeyword || hasWikiKeyword || hasLinkKeyword || mentionsUserContent;
   }
 
   private buildSystemPrompt(context: UserContext, contextDocs: string[], pageContext?: string): string {
     const projectList = context.projects.length > 0
-      ? `\n\nUser's Projects:\n${context.projects.map(p => `- ${p.name}${p.description ? `: ${p.description}` : ''}`).join('\n')}`
+      ? `\n\nUser's Accessible Projects:\n${context.projects.map((p) => `- ${p.name}${p.isOwner ? '' : ' (shared)'}${p.description ? `: ${p.description}` : ''}`).join('\n')}`
       : '';
 
     const topicList = context.wikiTopics.length > 0
-      ? `\n\nUser's Wiki Topics:\n${context.wikiTopics.map(t => `- ${t.title}${t.subjects ? ` (${t.subjects.length} subjects)` : ''}`).join('\n')}`
+      ? `\n\nWiki Topics:\n${context.wikiTopics.map((t) => `- ${t.title}${t.subjects ? ` (${t.subjects.length} subjects)` : ''}`).join('\n')}`
       : '';
 
     const linkList = context.links.length > 0
-      ? `\n\nUser's Saved Links: ${context.links.length} links available`
+      ? `\n\nUser's Saved Links:\n${context.links.map((l) => `- ${l.title}: ${l.url}`).join('\n')}`
       : '';
 
     const pageContextInfo = pageContext ? `\n\nCURRENT PAGE CONTEXT:\n${this.getPageContextInfo(pageContext, context)}` : '';
 
-    return `You are Grok, an AI assistant restricted to helping only with project management and wiki/documentation content.
+    return `You are Grok, an AI assistant restricted to helping only with the user's accessible project management data, wiki/documentation, and saved links.
 
 CRITICAL RESTRICTIONS:
-- You ONLY answer questions about the user's projects and wiki content.
-- You ONLY help with project management tasks (planning, scheduling, organizing, tracking).
-- You ONLY help with documentation/wiki topics (writing, organizing, referencing content).
-- You can reference saved links when relevant to user's content.
-- For any question outside these scopes, politely decline and redirect to these topics.
-- Do NOT provide general knowledge answers, coding help, or answers unrelated to projects/wiki.
-- You MUST use the provided project and wiki content to answer questions accurately.
+- You ONLY answer using the user's accessible projects (owned or shared with them), wiki content, and their personal saved links.
+- Do NOT reference projects, links, or content the user does not have access to.
+- For any question outside these scopes, politely decline and redirect.
+- Do NOT provide general knowledge answers unrelated to the user's data.
 
 ${projectList}${topicList}${linkList}${pageContextInfo}
 
 INSTRUCTIONS:
-- Use the provided project and wiki information to answer questions
-- Reference specific projects, topics, or content items when relevant
-- If asked about specific projects or wiki topics, provide detailed information from the content
-- When answering, cite the relevant project or wiki topic
-- Be conversational and helpful while staying within scope
-- When appropriate, reference the current page context to provide more relevant information`;
+- Use only the provided context to answer questions
+- Reference specific projects, wiki topics, or links when relevant
+- Be conversational and helpful while staying within scope`;
   }
 
   private getPageContextInfo(pageContext: string, context: UserContext): string {
     if (pageContext.includes('user_is_viewing_project:')) {
       const projectSlug = pageContext.split(':')[1];
-      const project = context.projects.find(p => p.slug === projectSlug);
+      const project = context.projects.find((p) => p.slug === projectSlug);
       if (project) {
-        return `The user is currently viewing the project "${project.name}". 
-You should provide information specific to this project when asked general questions about projects.
-When user asks about "this project" or "the current project", refer to "${project.name}".`;
+        return `The user is viewing project "${project.name}". Refer to this project when they ask about "this project".`;
       }
     } else if (pageContext.includes('user_is_viewing_wiki_topic:')) {
       const parts = pageContext.split('_');
-      const topicPart = parts.find(p => p.startsWith('user_is_viewing_wiki_topic:'));
+      const topicPart = parts.find((p) => p.startsWith('user_is_viewing_wiki_topic:'));
       const topicSlug = topicPart?.split(':')[1];
-      const subjectPart = parts.find(p => p.startsWith('subject:'));
+      const subjectPart = parts.find((p) => p.startsWith('subject:'));
       const subjectSlug = subjectPart?.split(':')[1];
 
-      let topicInfo = '';
-      if (topicSlug) {
-        const topic = context.wikiTopics.find(t => t.title.toLowerCase() === topicSlug?.toLowerCase());
-        if (topic) {
-          topicInfo = `The user is currently viewing the wiki topic "${topic.title}"`;
-          if (subjectSlug) {
-            const subject = topic.subjects?.find(s => s.title.toLowerCase() === subjectSlug?.toLowerCase());
-            if (subject) {
-              topicInfo += ` and the subject "${subject.title}"`;
-            }
-          }
-          topicInfo += '.\nYou should provide information specific to this wiki topic when asked general questions about documentation.\nWhen user asks about "this topic" or "the current wiki", refer to this content.';
+      const topic = context.wikiTopics.find((t) => t.slug === topicSlug || t.title.toLowerCase() === topicSlug?.toLowerCase());
+      if (topic) {
+        let info = `The user is viewing wiki topic "${topic.title}"`;
+        if (subjectSlug) {
+          const subject = topic.subjects?.find((s) => s.title.toLowerCase() === subjectSlug?.toLowerCase());
+          if (subject) info += `, subject "${subject.title}"`;
         }
+        return `${info}.`;
       }
-      return topicInfo || 'The user is currently viewing a wiki topic. Provide context-aware information when asked.';
     } else if (pageContext === 'user_is_on_projects_page') {
-      return 'The user is on the projects page. They may want to know about their projects or create new ones.';
+      return 'The user is on the projects page.';
     } else if (pageContext === 'user_is_on_wiki_page') {
-      return 'The user is on the wiki page. They may want to know about their documentation or create new wiki content.';
+      return 'The user is on the wiki page.';
     } else if (pageContext === 'user_is_on_dashboard') {
-      return 'The user is on the dashboard. Provide a quick summary of their projects and wiki if asked.';
+      return 'The user is on the dashboard.';
     } else if (pageContext === 'user_is_on_links_page') {
-      return `The user is on the links page. They have ${context.links.length} saved links. Help them organize or find specific links.`;
+      return `The user is on the links page with ${context.links.length} saved links.`;
     }
 
-    return 'The user is using the app. Help them with their projects and wiki content.';
+    return 'Help the user with their accessible projects, wiki, and links.';
   }
 }
-

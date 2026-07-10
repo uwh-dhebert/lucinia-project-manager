@@ -49,8 +49,24 @@ model Project {
   designDoc             ProjectDesignDoc?
   stories               ProjectStory[]
   notes                 ProjectNote[]
+  members               ProjectMember[]
 
   @@map("projects")
+}
+
+model ProjectMember {
+  id        String   @id @default(uuid()) @db.Uuid
+  projectId String   @db.Uuid @map("projectId")
+  userId    String   @db.Uuid @map("userId")
+  addedBy   String   @db.Uuid @map("addedBy")
+  createdAt DateTime @default(now()) @map("createdAt")
+
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, userId])
+  @@index([projectId])
+  @@index([userId])
+  @@map("project_members")
 }
 
 // Project Design Document

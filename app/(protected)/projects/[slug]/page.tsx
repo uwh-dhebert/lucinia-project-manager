@@ -9,6 +9,7 @@ import { MarkdownRenderer } from '@/components/MarkdownRenderer'
 import { StoriesTab } from '@/components/StoriesTab'
 import { NotesTab } from '@/components/NotesTab'
 import { ActionsMenu } from '@/components/ActionsMenu'
+import { ShareProjectModal } from '@/components/ShareProjectModal'
 
 interface Project {
   id: string
@@ -16,6 +17,8 @@ interface Project {
   slug: string
   description: string
   ownerId: string
+  isOwner?: boolean
+  isShared?: boolean
   createdAt: string
   updatedAt: string
 }
@@ -28,6 +31,7 @@ export default function ProjectDetailPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [editModalOpen, setEditModalOpen] = useState(false)
+  const [shareModalOpen, setShareModalOpen] = useState(false)
   const [designDocModalOpen, setDesignDocModalOpen] = useState(false)
   const [activeTab, setActiveTab] = useState<'notes' | 'design-doc' | 'stories'>('notes')
   const [designDocContent, setDesignDocContent] = useState<string>('')
@@ -96,8 +100,8 @@ export default function ProjectDetailPage() {
   if (loading) {
     return (
       <div className="text-center py-12">
-        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-        <p className="text-slate-400 mt-2">Loading project...</p>
+        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-lucina-secondary"></div>
+        <p className="text-lucina-muted mt-2">Loading project...</p>
       </div>
     )
   }
@@ -105,11 +109,11 @@ export default function ProjectDetailPage() {
   if (error || !project) {
     return (
       <div className="space-y-6">
-        <Link href="/projects" className="text-blue-400 hover:underline">
+        <Link href="/projects" className="text-lucina-secondary hover:underline">
           ← Back to Projects
         </Link>
-        <div className="border border-red-700 rounded-2xl p-8 text-center bg-red-900/30">
-          <p className="text-red-400">{error || 'Project not found'}</p>
+        <div className="border border-red-300 rounded-2xl p-8 text-center bg-red-50">
+          <p className="text-red-600">{error || 'Project not found'}</p>
         </div>
       </div>
     )
@@ -120,34 +124,50 @@ export default function ProjectDetailPage() {
       {/* Header with Actions Menu */}
       <div className="flex justify-between items-start gap-4">
         <div>
-          <Link href="/projects" className="text-blue-400 hover:underline mb-4 inline-block">
+          <Link href="/projects" className="text-lucina-secondary hover:underline mb-4 inline-block">
             ← Back to Projects
           </Link>
-          <h1 className="text-4xl font-bold text-white mt-2">{project.name}</h1>
+          <h1 className="text-4xl font-bold text-lucina-primary mt-2">{project.name}</h1>
+          {project.isShared && (
+            <span className="mt-2 inline-block text-sm font-medium text-lucina-secondary bg-lucina-surface px-3 py-1 rounded-full">
+              Shared with you
+            </span>
+          )}
           {project.description && (
-            <p className="text-slate-400 mt-2">{project.description}</p>
+            <p className="text-lucina-muted mt-2">{project.description}</p>
           )}
         </div>
-        <ActionsMenu
+        <div className="flex items-center gap-2">
+          {project.isOwner !== false && (
+            <button
+              onClick={() => setShareModalOpen(true)}
+              className="px-4 py-2 text-sm font-medium text-lucina-primary bg-lucina-rose border-2 border-lucina-dark rounded-xl hover:bg-lucina-rose-hover transition-colors"
+            >
+              Share
+            </button>
+          )}
+          <ActionsMenu
           project={project}
           onEdit={() => setEditModalOpen(true)}
           onDelete={handleDelete}
+          canDelete={project.isOwner !== false}
           onGenerateDesignDoc={() => setDesignDocModalOpen(true)}
           onDownloadDesignDoc={() => {
             // Download design doc functionality
           }}
         />
+        </div>
       </div>
 
       {/* Tabs */}
       <div className="space-y-6">
-        <div className="flex gap-4 border-b border-slate-700">
+        <div className="flex gap-4 border-b border-lucina-rose">
           <button
             onClick={() => setActiveTab('notes')}
             className={`px-6 py-3 font-semibold transition-colors ${
               activeTab === 'notes'
-                ? 'text-blue-400 border-b-2 border-blue-400'
-                : 'text-slate-400 hover:text-slate-300'
+                ? 'text-lucina-secondary border-b-2 border-lucina-secondary'
+                : 'text-lucina-muted hover:text-lucina-secondary'
             }`}
           >
             📝 Notes
@@ -156,8 +176,8 @@ export default function ProjectDetailPage() {
             onClick={() => setActiveTab('design-doc')}
             className={`px-6 py-3 font-semibold transition-colors ${
               activeTab === 'design-doc'
-                ? 'text-blue-400 border-b-2 border-blue-400'
-                : 'text-slate-400 hover:text-slate-300'
+                ? 'text-lucina-secondary border-b-2 border-lucina-secondary'
+                : 'text-lucina-muted hover:text-lucina-secondary'
             }`}
           >
             📄 Design Doc
@@ -166,8 +186,8 @@ export default function ProjectDetailPage() {
             onClick={() => setActiveTab('stories')}
             className={`px-6 py-3 font-semibold transition-colors ${
               activeTab === 'stories'
-                ? 'text-blue-400 border-b-2 border-blue-400'
-                : 'text-slate-400 hover:text-slate-300'
+                ? 'text-lucina-secondary border-b-2 border-lucina-secondary'
+                : 'text-lucina-muted hover:text-lucina-secondary'
             }`}
           >
             📖 Stories
@@ -176,31 +196,31 @@ export default function ProjectDetailPage() {
 
         {/* Tab Content */}
         {activeTab === 'notes' && (
-          <div className="bg-slate-800 border border-slate-700 rounded-2xl p-6 min-h-96">
+          <div className="bg-lucina-white border border-lucina-rose rounded-2xl p-6 min-h-96">
             <NotesTab projectId={project.id} />
           </div>
         )}
 
         {activeTab === 'design-doc' && (
-          <div className="bg-slate-800 border border-slate-700 rounded-2xl p-6 min-h-96">
+          <div className="bg-lucina-white border border-lucina-rose rounded-2xl p-6 min-h-96">
             {designDocContent ? (
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
-                  <h3 className="text-xl font-bold text-white">Project Design Document</h3>
+                  <h3 className="text-xl font-bold text-lucina-primary">Project Design Document</h3>
                   <div className="flex gap-2">
                     <button
                       onClick={() => setIsEditingDesignDoc(!isEditingDesignDoc)}
                       className={`px-4 py-2 rounded-lg transition-colors font-medium ${
                         isEditingDesignDoc
-                          ? 'bg-green-600 hover:bg-green-700 text-white'
-                          : 'bg-slate-700 hover:bg-slate-600 text-white'
+                          ? 'bg-green-600 hover:bg-green-700 text-lucina-primary'
+                          : 'bg-lucina-surface hover:bg-lucina-rose-hover text-lucina-primary'
                       }`}
                     >
                       {isEditingDesignDoc ? '✓ Done Editing' : '✏️ Edit'}
                     </button>
                     <button
                       onClick={() => setDesignDocModalOpen(true)}
-                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                      className="px-4 py-2 bg-lucina-rose text-lucina-primary rounded-lg hover:bg-lucina-rose-hover transition-colors font-medium"
                     >
                       🔄 Regenerate
                     </button>
@@ -223,10 +243,10 @@ export default function ProjectDetailPage() {
                         console.error('Error saving design doc:', err);
                       }
                     }}
-                    className="w-full h-96 px-4 py-3 bg-slate-900 border border-slate-600 rounded-lg text-white font-mono text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full h-96 px-4 py-3 bg-lucina-primary border border-lucina-rose rounded-lg text-lucina-primary font-mono text-sm focus:outline-none focus:ring-2 focus:ring-lucina-secondary"
                   />
                 ) : (
-                  <div className="bg-slate-900 border border-slate-700 rounded-lg p-4 overflow-auto max-h-96 text-slate-300 text-sm">
+                  <div className="bg-lucina-primary border border-lucina-rose rounded-lg p-4 overflow-auto max-h-96 text-lucina-secondary text-sm">
                     <MarkdownRenderer content={designDocContent} />
                   </div>
                 )}
@@ -234,11 +254,11 @@ export default function ProjectDetailPage() {
             ) : (
               <div className="text-center py-8">
                 <div className="text-4xl mb-4">📄</div>
-                <h3 className="text-lg font-semibold text-white mb-2">No Design Document</h3>
-                <p className="text-slate-400 mb-6">Generate a design document to get started</p>
+                <h3 className="text-lg font-semibold text-lucina-primary mb-2">No Design Document</h3>
+                <p className="text-lucina-muted mb-6">Generate a design document to get started</p>
                 <button
                   onClick={() => setDesignDocModalOpen(true)}
-                  className="px-6 py-2 bg-gradient-to-r from-purple-600 to-purple-700 text-white font-medium rounded-full hover:from-purple-500 hover:to-purple-600 transition-colors"
+                  className="px-6 py-2 bg-gradient-to-r from-lucina-rose to-lucina-rose-hover text-lucina-primary font-medium rounded-full hover:from-lucina-rose-hover hover:to-lucina-secondary transition-colors"
                 >
                   🚀 Generate Design Doc
                 </button>
@@ -248,7 +268,7 @@ export default function ProjectDetailPage() {
         )}
 
         {activeTab === 'stories' && (
-          <div className="bg-slate-800 border border-slate-700 rounded-2xl p-6 min-h-96">
+          <div className="bg-lucina-white border border-lucina-rose rounded-2xl p-6 min-h-96">
             <StoriesTab
               projectId={project.id}
               designDocContent={designDocContent}
@@ -261,6 +281,13 @@ export default function ProjectDetailPage() {
       </div>
 
       {/* Tabs */}
+       <ShareProjectModal
+         isOpen={shareModalOpen}
+         projectId={project.id}
+         projectName={project.name}
+         onClose={() => setShareModalOpen(false)}
+       />
+
        <EditProjectModal
          isOpen={editModalOpen}
          projectId={project.id}

@@ -62,24 +62,24 @@ export function EditProjectModal({
   return (
     <dialog
       ref={dialogRef}
-      className="backdrop:bg-black/70 rounded-2xl shadow-2xl max-w-md w-full p-6 bg-slate-800 border border-slate-700"
+      className="backdrop:bg-black/70 rounded-2xl shadow-2xl max-w-md w-full p-6 bg-lucina-white border border-lucina-rose"
       onClose={onClose}
     >
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
-          <h2 className="text-2xl font-bold text-white">Edit Project</h2>
-          <p className="text-slate-400 text-sm mt-1">Update project details</p>
+          <h2 className="text-2xl font-bold text-lucina-primary">Edit Project</h2>
+          <p className="text-lucina-muted text-sm mt-1">Update project details</p>
         </div>
 
         {error && (
-          <div className="p-3 bg-red-900/30 border border-red-700 rounded-lg text-sm text-red-400">
+          <div className="p-3 bg-red-50 border border-red-300 rounded-lg text-sm text-red-600">
             {error}
           </div>
         )}
 
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-slate-200 mb-2">
+            <label className="block text-sm font-medium text-lucina-primary mb-2">
               Project Name
             </label>
             <input
@@ -87,14 +87,14 @@ export function EditProjectModal({
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Project name"
-              className="w-full px-4 py-2 border border-slate-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-slate-700 text-white placeholder-slate-500"
+              className="w-full px-4 py-2 border border-lucina-rose rounded-xl focus:outline-none focus:ring-2 focus:ring-lucina-secondary focus:border-transparent bg-lucina-surface text-lucina-primary placeholder-lucina-muted"
               required
               disabled={loading}
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-200 mb-2">
+            <label className="block text-sm font-medium text-lucina-primary mb-2">
               Description (optional)
             </label>
             <textarea
@@ -102,7 +102,7 @@ export function EditProjectModal({
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Project description"
               rows={3}
-              className="w-full px-4 py-2 border border-slate-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-slate-700 text-white placeholder-slate-500 resize-none"
+              className="w-full px-4 py-2 border border-lucina-rose rounded-xl focus:outline-none focus:ring-2 focus:ring-lucina-secondary focus:border-transparent bg-lucina-surface text-lucina-primary placeholder-lucina-muted resize-none"
               disabled={loading}
             />
           </div>
@@ -112,14 +112,14 @@ export function EditProjectModal({
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 px-4 py-2.5 border border-slate-600 text-slate-300 font-medium rounded-full hover:bg-slate-700 transition-colors disabled:opacity-50"
+            className="flex-1 px-4 py-2.5 border border-lucina-rose text-lucina-secondary font-medium rounded-full hover:bg-lucina-surface transition-colors disabled:opacity-50"
             disabled={loading}
           >
             Cancel
           </button>
           <button
             type="submit"
-            className="flex-1 px-4 py-2.5 bg-blue-600 text-white font-medium rounded-full hover:bg-blue-700 transition-colors disabled:opacity-50"
+            className="flex-1 px-4 py-2.5 bg-lucina-rose text-lucina-primary font-medium rounded-full hover:bg-lucina-rose-hover transition-colors disabled:opacity-50"
             disabled={loading}
           >
             {loading ? 'Saving...' : 'Save Changes'}

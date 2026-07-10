@@ -92,13 +92,13 @@ function TreeNode({
         {hasChildren ? (
           <button
             onClick={() => onToggle(item.id)}
-            className="p-0.5 hover:bg-slate-700 rounded transition-colors"
+            className="p-0.5 hover:bg-lucina-surface rounded transition-colors"
             aria-label={isExpanded ? 'Collapse' : 'Expand'}
           >
             {isExpanded ? (
-              <ChevronDown className="w-3.5 h-3.5 text-violet-400" />
+              <ChevronDown className="w-3.5 h-3.5 text-lucina-secondary" />
             ) : (
-              <ChevronRight className="w-3.5 h-3.5 text-slate-500" />
+              <ChevronRight className="w-3.5 h-3.5 text-lucina-muted" />
             )}
           </button>
         ) : (
@@ -108,9 +108,9 @@ function TreeNode({
         {/* Node Content */}
         <div className="flex-1 flex items-center gap-1.5 min-w-0">
           {/* Icon */}
-          {type === 'topic' && <BookOpen className="w-3.5 h-3.5 text-violet-400 flex-shrink-0" />}
-          {type === 'subject' && <Folder className="w-3.5 h-3.5 text-blue-400 flex-shrink-0" />}
-          {type === 'content' && <FileText className="w-3.5 h-3.5 text-slate-500 flex-shrink-0" />}
+          {type === 'topic' && <BookOpen className="w-3.5 h-3.5 text-lucina-secondary flex-shrink-0" />}
+          {type === 'subject' && <Folder className="w-3.5 h-3.5 text-lucina-secondary flex-shrink-0" />}
+          {type === 'content' && <FileText className="w-3.5 h-3.5 text-lucina-muted flex-shrink-0" />}
 
            {/* Link or Label */}
            {href ? (
@@ -119,14 +119,14 @@ function TreeNode({
                onClick={handleSelect}
                className={`flex-1 px-1 py-0.5 rounded text-xs truncate transition-colors ${
                  isActive
-                   ? 'bg-violet-600/30 text-violet-300 font-medium'
-                   : 'text-slate-300 hover:text-white hover:bg-slate-700/50'
+                   ? 'bg-lucina-surface text-lucina-secondary font-medium'
+                   : 'text-lucina-secondary hover:text-lucina-primary hover:bg-lucina-surface/50'
                }`}
              >
                {getDisplayTitle()}
              </Link>
            ) : (
-             <span className="flex-1 px-1 py-0.5 rounded text-xs truncate text-slate-300">
+             <span className="flex-1 px-1 py-0.5 rounded text-xs truncate text-lucina-secondary">
                {getDisplayTitle()}
              </span>
            )}
@@ -136,7 +136,7 @@ function TreeNode({
         {type !== 'content' && (
           <button
             onClick={() => onAdd(type === 'topic' ? 'subject' : 'content', item.id)}
-            className="p-0.5 opacity-0 group-hover:opacity-100 hover:bg-violet-600 rounded transition-all hover:text-white text-slate-400 flex-shrink-0"
+            className="p-0.5 opacity-0 group-hover:opacity-100 hover:bg-lucina-secondary rounded transition-all hover:text-lucina-primary text-lucina-muted flex-shrink-0"
             title={`Add ${type === 'topic' ? 'subject' : 'content'}`}
           >
             <Plus className="w-3 h-3" />
@@ -246,7 +246,7 @@ export function WikiSidebar({ onItemSelect, activeItemId }: WikiSidebarProps) {
 
   if (loading) {
     return (
-      <div className="px-4 py-2 text-xs text-slate-400">
+      <div className="px-4 py-2 text-xs text-lucina-muted">
         <span className="animate-pulse">Loading wiki...</span>
       </div>
     )
@@ -257,12 +257,12 @@ export function WikiSidebar({ onItemSelect, activeItemId }: WikiSidebarProps) {
       {/* Wiki Header */}
       <div className="px-4 py-3 flex items-center justify-between gap-2">
         <div className="flex items-center gap-2 min-w-0">
-          <BookOpen className="w-4 h-4 text-violet-400 flex-shrink-0" />
-          <span className="text-sm font-semibold text-white truncate">Wiki</span>
+          <BookOpen className="w-4 h-4 text-lucina-secondary flex-shrink-0" />
+          <span className="text-sm font-semibold text-lucina-primary truncate">Wiki</span>
         </div>
         <button
           onClick={() => handleAdd('topic')}
-          className="p-1 hover:bg-violet-600 rounded transition-colors text-slate-400 hover:text-white flex-shrink-0"
+          className="p-1 hover:bg-lucina-secondary rounded transition-colors text-lucina-muted hover:text-lucina-primary flex-shrink-0"
           title="Add topic"
         >
           <Plus className="w-3.5 h-3.5" />
@@ -272,7 +272,7 @@ export function WikiSidebar({ onItemSelect, activeItemId }: WikiSidebarProps) {
       {/* Tree Items */}
       {topics.length === 0 ? (
         <div className="px-4 py-2 text-center">
-          <p className="text-xs text-slate-400">No topics</p>
+          <p className="text-xs text-lucina-muted">No topics</p>
         </div>
       ) : (
         <div className="space-y-0.5 px-2">

@@ -5,6 +5,7 @@
 
 import { createClient } from '@/utils/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
+import { canAccessProject } from '@/lib/project-access';
 
 interface GenerateStoriesRequest {
   designDoc: string;
@@ -38,11 +39,18 @@ export async function POST(
     }
 
     // Verify project exists and user owns it
+    const allowed = await canAccessProject(supabase, user.id, projectId);
+    if (!allowed) {
+      return NextResponse.json(
+        { error: 'Project not found' },
+        { status: 404 }
+      );
+    }
+
     const { data: project, error: projectError } = await supabase
       .from('projects')
       .select('*')
       .eq('id', projectId)
-      .eq('ownerId', user.id)
       .single();
 
     if (projectError || !project) {

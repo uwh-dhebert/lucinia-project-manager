@@ -4,9 +4,9 @@ interface AuthAlertProps {
 }
 
 const styles = {
-  error: 'bg-red-900/30 border-red-700 text-red-300',
-  success: 'bg-emerald-900/30 border-emerald-700 text-emerald-300',
-  info: 'bg-blue-900/30 border-blue-700 text-blue-300',
+  error: 'bg-red-50 border-red-300 text-red-700',
+  success: 'bg-emerald-50 border-emerald-300 text-emerald-700',
+  info: 'bg-lucina-surface border-lucina-rose text-lucina-secondary',
 };
 
 const icons = {

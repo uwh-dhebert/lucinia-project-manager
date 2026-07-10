@@ -48,9 +48,9 @@ export default function ForgotPasswordPage() {
       title="Reset your password"
       subtitle="We'll email you a link to choose a new password"
       footer={
-        <p className="text-center text-slate-400 text-sm">
+        <p className="text-center text-lucina-muted text-sm">
           Remember your password?{' '}
-          <Link href="/auth/login" className="text-blue-400 font-semibold hover:text-blue-300 transition-colors">
+          <Link href="/auth/login" className="text-lucina-secondary font-semibold hover:text-lucina-secondary transition-colors">
             Sign in
           </Link>
         </p>
@@ -64,7 +64,7 @@ export default function ForgotPasswordPage() {
           />
           <Link
             href="/auth/login"
-            className="block w-full py-3 text-center bg-slate-700 hover:bg-slate-600 text-white font-semibold rounded-full transition-colors"
+            className="block w-full py-3 text-center bg-lucina-surface hover:bg-lucina-rose-hover text-lucina-primary font-semibold rounded-full transition-colors"
           >
             Back to sign in
           </Link>
@@ -72,7 +72,7 @@ export default function ForgotPasswordPage() {
       ) : (
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label htmlFor="email" className="block text-sm font-semibold text-slate-200 mb-2">
+            <label htmlFor="email" className="block text-sm font-semibold text-lucina-primary mb-2">
               Email address
             </label>
             <input
@@ -82,7 +82,7 @@ export default function ForgotPasswordPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
-              className="w-full px-4 py-3 border border-slate-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-slate-700/80 text-white placeholder-slate-500 transition-all"
+              className="w-full px-4 py-3 border border-lucina-rose rounded-xl focus:outline-none focus:ring-2 focus:ring-lucina-secondary focus:border-transparent bg-lucina-white text-lucina-primary placeholder-lucina-muted transition-all"
               disabled={loading}
             />
           </div>
@@ -92,11 +92,11 @@ export default function ForgotPasswordPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-full hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:scale-[1.02] active:scale-[0.98]"
+            className="w-full py-3 btn-lucina transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? (
               <span className="flex items-center justify-center gap-2">
-                <span className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
+                <span className="animate-spin rounded-full h-4 w-4 border-2 border-lucina-cream border-t-transparent" />
                 Sending link...
               </span>
             ) : (

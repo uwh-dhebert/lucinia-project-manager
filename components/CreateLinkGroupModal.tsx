@@ -53,12 +53,12 @@ export default function CreateLinkGroupModal({ onClose, onGroupCreated }: Create
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-slate-800 rounded-2xl p-8 max-w-md w-full mx-4">
-        <h2 className="text-2xl font-bold text-white mb-6">Create New Group</h2>
+      <div className="bg-lucina-white rounded-2xl p-8 max-w-md w-full mx-4">
+        <h2 className="text-2xl font-bold text-lucina-primary mb-6">Create New Group</h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="name" className="block text-sm font-medium text-slate-300 mb-2">
+            <label htmlFor="name" className="block text-sm font-medium text-lucina-secondary mb-2">
               Group Name
             </label>
             <input
@@ -67,13 +67,13 @@ export default function CreateLinkGroupModal({ onClose, onGroupCreated }: Create
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g., Development Tools, Learning Resources"
-              className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 transition-colors"
+              className="w-full px-4 py-2 bg-lucina-surface border border-lucina-rose rounded-lg text-lucina-primary placeholder-lucina-muted focus:outline-none focus:border-lucina-secondary transition-colors"
               disabled={loading}
             />
           </div>
 
           {error && (
-            <div className="p-3 bg-red-900 border border-red-700 rounded-lg text-red-200 text-sm">
+            <div className="p-3 bg-red-900 border border-red-300 rounded-lg text-red-200 text-sm">
               {error}
             </div>
           )}
@@ -82,14 +82,14 @@ export default function CreateLinkGroupModal({ onClose, onGroupCreated }: Create
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-2 bg-slate-700 text-white font-medium rounded-lg hover:bg-slate-600 transition-colors"
+              className="flex-1 px-4 py-2 bg-lucina-surface text-lucina-primary font-medium rounded-lg hover:bg-lucina-rose-hover transition-colors"
               disabled={loading}
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="flex-1 px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+              className="flex-1 px-4 py-2 bg-lucina-rose text-lucina-primary font-medium rounded-lg hover:bg-lucina-rose-hover transition-colors disabled:opacity-50"
               disabled={loading}
             >
               {loading ? 'Creating...' : 'Create'}

@@ -22,6 +22,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { CreateProjectModal } from '@/components/CreateProjectModal';
+import { ShareProjectModal } from '@/components/ShareProjectModal';
 import {
   PRIORITY_ZONES,
   ZONE_BADGE_COLORS,
@@ -42,7 +43,7 @@ function ZoneDivider({ label, color }: { label: string; color: string }) {
         <div className={`w-full border-t-2 ${color}`} />
       </div>
       <div className="relative flex justify-center">
-        <span className="bg-slate-900 px-4 text-xs font-semibold uppercase tracking-wider text-slate-400">
+        <span className="bg-lucina-primary px-4 text-xs font-semibold uppercase tracking-wider text-lucina-muted">
           {label}
         </span>
       </div>
@@ -54,10 +55,11 @@ interface ProjectCardProps {
   item: ProjectPriorityItem;
   onResponsibleBlur: (id: string, responsible: string) => void;
   onStatusChange: (id: string, zone: PriorityZone) => void;
+  onShare?: (id: string, name: string) => void;
   isDragging?: boolean;
 }
 
-function ProjectCard({ item, onResponsibleBlur, onStatusChange, isDragging }: ProjectCardProps) {
+function ProjectCard({ item, onResponsibleBlur, onStatusChange, onShare, isDragging }: ProjectCardProps) {
   const {
     attributes,
     listeners,
@@ -77,20 +79,27 @@ function ProjectCard({ item, onResponsibleBlur, onStatusChange, isDragging }: Pr
     <div
       ref={setNodeRef}
       style={style}
-      className={`group flex h-full flex-col rounded-xl border border-slate-600 bg-slate-800 p-4 shadow-sm transition-shadow hover:border-slate-500 hover:shadow-md ${
-        isDragging ? 'shadow-xl ring-2 ring-blue-500/50' : ''
+      className={`group flex h-full flex-col rounded-xl border border-lucina-rose bg-lucina-white p-4 shadow-sm transition-shadow hover:border-lucina-secondary hover:shadow-md ${
+        isDragging ? 'shadow-xl ring-2 ring-lucina-secondary/50' : ''
       }`}
     >
       <div className="mb-3 flex items-start justify-between gap-2">
-        <Link
-          href={`/projects/${item.slug}`}
-          className="min-w-0 flex-1 font-semibold text-white hover:text-blue-400 transition-colors line-clamp-2"
-        >
-          {item.name}
-        </Link>
+        <div className="min-w-0 flex-1">
+          <Link
+            href={`/projects/${item.slug}`}
+            className="font-semibold text-lucina-primary hover:text-lucina-secondary transition-colors line-clamp-2"
+          >
+            {item.name}
+          </Link>
+          {item.isShared && (
+            <span className="mt-1 inline-block text-xs font-medium text-lucina-secondary bg-lucina-surface px-2 py-0.5 rounded-full">
+              Shared with you
+            </span>
+          )}
+        </div>
         <button
           type="button"
-          className="shrink-0 cursor-grab touch-none rounded-lg p-1.5 text-slate-500 hover:bg-slate-700 hover:text-slate-300 active:cursor-grabbing"
+          className="shrink-0 cursor-grab touch-none rounded-lg p-1.5 text-lucina-muted hover:bg-lucina-surface hover:text-lucina-secondary active:cursor-grabbing"
           aria-label={`Drag ${item.name}`}
           {...attributes}
           {...listeners}
@@ -102,19 +111,19 @@ function ProjectCard({ item, onResponsibleBlur, onStatusChange, isDragging }: Pr
       </div>
 
       {item.description && (
-        <p className="text-slate-400 text-sm line-clamp-2 mb-3">{item.description}</p>
+        <p className="text-lucina-muted text-sm line-clamp-2 mb-3">{item.description}</p>
       )}
 
       <div className="mt-auto space-y-2">
         <div>
-          <label className="block text-xs font-medium text-slate-500 mb-1">Status</label>
+          <label className="block text-xs font-medium text-lucina-muted mb-1">Status</label>
           <select
             value={item.zone}
             onChange={(e) => onStatusChange(item.id, e.target.value as PriorityZone)}
-            className={`w-full rounded-lg border px-2.5 py-1.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 ${ZONE_BADGE_COLORS[item.zone]}`}
+            className={`w-full rounded-lg border px-2.5 py-1.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-lucina-secondary ${ZONE_BADGE_COLORS[item.zone]}`}
           >
             {PRIORITY_ZONES.map((zone) => (
-              <option key={zone} value={zone} className="bg-slate-800 text-white">
+              <option key={zone} value={zone} className="bg-lucina-white text-lucina-primary">
                 {ZONE_LABELS[zone]}
               </option>
             ))}
@@ -122,15 +131,25 @@ function ProjectCard({ item, onResponsibleBlur, onStatusChange, isDragging }: Pr
         </div>
 
         <div>
-          <label className="block text-xs font-medium text-slate-500 mb-1">Responsible</label>
+          <label className="block text-xs font-medium text-lucina-muted mb-1">Responsible</label>
           <input
             type="text"
             defaultValue={item.responsible}
             onBlur={(e) => onResponsibleBlur(item.id, e.target.value)}
             placeholder="Unassigned"
-            className="w-full rounded-lg border border-slate-600 bg-slate-700 px-2.5 py-1.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full rounded-lg border border-lucina-rose bg-lucina-surface px-2.5 py-1.5 text-sm text-lucina-primary placeholder-lucina-muted focus:outline-none focus:ring-2 focus:ring-lucina-secondary"
           />
         </div>
+
+        {item.isOwner !== false && onShare && (
+          <button
+            type="button"
+            onClick={() => onShare(item.id, item.name)}
+            className="w-full text-xs font-medium text-lucina-secondary hover:text-lucina-primary py-1.5 rounded-lg hover:bg-lucina-surface transition-colors"
+          >
+            Share with team
+          </button>
+        )}
       </div>
     </div>
   );
@@ -141,6 +160,7 @@ function ZoneSection({
   items,
   onResponsibleBlur,
   onStatusChange,
+  onShare,
   showTopDivider,
   dividerLabel,
   dividerColor,
@@ -149,6 +169,7 @@ function ZoneSection({
   items: ProjectPriorityItem[];
   onResponsibleBlur: (id: string, responsible: string) => void;
   onStatusChange: (id: string, zone: PriorityZone) => void;
+  onShare?: (id: string, name: string) => void;
   showTopDivider?: boolean;
   dividerLabel?: string;
   dividerColor?: string;
@@ -165,21 +186,21 @@ function ZoneSection({
       <div
         ref={setNodeRef}
         className={`rounded-2xl border p-4 min-h-[80px] transition-colors ${ZONE_COLORS[zone]} ${
-          isOver ? 'ring-2 ring-blue-500/40' : ''
+          isOver ? 'ring-2 ring-lucina-secondary/40' : ''
         }`}
       >
         <div className="mb-3 flex items-center justify-between">
-          <h3 className="text-sm font-bold uppercase tracking-wide text-slate-300">
+          <h3 className="text-sm font-bold uppercase tracking-wide text-lucina-secondary">
             {ZONE_LABELS[zone]}
           </h3>
-          <span className="rounded-full bg-slate-800 px-2.5 py-0.5 text-xs text-slate-400">
+          <span className="rounded-full bg-lucina-white px-2.5 py-0.5 text-xs text-lucina-muted">
             {items.length}
           </span>
         </div>
 
         <SortableContext items={ids} strategy={rectSortingStrategy}>
           {items.length === 0 ? (
-            <p className="py-6 text-center text-sm text-slate-500">Drop projects here</p>
+            <p className="py-6 text-center text-sm text-lucina-muted">Drop projects here</p>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {items.map((item) => (
@@ -188,6 +209,7 @@ function ZoneSection({
                   item={item}
                   onResponsibleBlur={onResponsibleBlur}
                   onStatusChange={onStatusChange}
+                  onShare={onShare}
                 />
               ))}
             </div>
@@ -203,6 +225,7 @@ export function ProjectsBoard() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
+  const [shareModal, setShareModal] = useState<{ id: string; name: string } | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [dbError, setDbError] = useState('');
 
@@ -398,8 +421,8 @@ export function ProjectsBoard() {
   if (loading) {
     return (
       <div className="text-center py-12">
-        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
-        <p className="text-slate-400 mt-2">Loading projects...</p>
+        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-lucina-secondary" />
+        <p className="text-lucina-muted mt-2">Loading projects...</p>
       </div>
     );
   }
@@ -408,7 +431,7 @@ export function ProjectsBoard() {
     return (
       <div className="rounded-2xl border border-amber-700/50 bg-amber-950/20 p-8 text-center">
         <p className="text-amber-300 font-medium">{dbError}</p>
-        <p className="text-slate-400 text-sm mt-2">
+        <p className="text-lucina-muted text-sm mt-2">
           Run PROJECT_PRIORITIES.sql in the Supabase SQL Editor to add priority columns to projects.
         </p>
       </div>
@@ -419,16 +442,16 @@ export function ProjectsBoard() {
     <div className="space-y-6">
       <div className="flex justify-between items-start">
         <div>
-          <h1 className="text-4xl font-bold text-white">Projects</h1>
-          <p className="text-slate-400 mt-2">
-            Drag projects between Active, Prioritized, and In Design. Edit status and assign owners inline.
+          <h1 className="text-4xl font-bold text-lucina-primary">Projects</h1>
+          <p className="text-lucina-muted mt-2">
+            Drag projects between zones, mark them completed, and share with your team.
           </p>
         </div>
         <div className="flex items-center gap-3">
-          {saving && <span className="text-xs text-slate-500">Saving...</span>}
+          {saving && <span className="text-xs text-lucina-muted">Saving...</span>}
           <button
             onClick={() => setModalOpen(true)}
-            className="px-6 py-2.5 bg-blue-600 text-white font-medium rounded-full hover:bg-blue-700 transition-colors shadow-lg hover:shadow-xl"
+            className="px-6 py-2.5 bg-lucina-rose text-lucina-primary font-medium rounded-full hover:bg-lucina-rose-hover transition-colors shadow-lg hover:shadow-xl"
           >
             + New Project
           </button>
@@ -436,12 +459,12 @@ export function ProjectsBoard() {
       </div>
 
       {items.length === 0 ? (
-        <div className="border border-dashed border-slate-600 rounded-2xl p-12 text-center">
+        <div className="border border-dashed border-lucina-rose rounded-2xl p-12 text-center">
           <div className="text-5xl mb-4">📋</div>
-          <p className="text-slate-400 mb-6 text-lg">No projects yet. Create your first project to get started.</p>
+          <p className="text-lucina-muted mb-6 text-lg">No projects yet. Create your first project to get started.</p>
           <button
             onClick={() => setModalOpen(true)}
-            className="px-8 py-3 bg-blue-600 text-white font-medium rounded-full hover:bg-blue-700 transition-colors shadow-lg hover:shadow-xl"
+            className="px-8 py-3 bg-lucina-rose text-lucina-primary font-medium rounded-full hover:bg-lucina-rose-hover transition-colors shadow-lg hover:shadow-xl"
           >
             Create Your First Project
           </button>
@@ -460,6 +483,7 @@ export function ProjectsBoard() {
               items={grouped.active}
               onResponsibleBlur={handleResponsibleBlur}
               onStatusChange={handleStatusChange}
+              onShare={(id, name) => setShareModal({ id, name })}
             />
 
             <ZoneSection
@@ -467,6 +491,7 @@ export function ProjectsBoard() {
               items={grouped.prioritized}
               onResponsibleBlur={handleResponsibleBlur}
               onStatusChange={handleStatusChange}
+              onShare={(id, name) => setShareModal({ id, name })}
               showTopDivider
               dividerLabel="Active → Prioritized"
               dividerColor="border-emerald-500/40"
@@ -477,9 +502,21 @@ export function ProjectsBoard() {
               items={grouped.in_design}
               onResponsibleBlur={handleResponsibleBlur}
               onStatusChange={handleStatusChange}
+              onShare={(id, name) => setShareModal({ id, name })}
               showTopDivider
               dividerLabel="Prioritized → In Design"
               dividerColor="border-amber-500/40"
+            />
+
+            <ZoneSection
+              zone="completed"
+              items={grouped.completed}
+              onResponsibleBlur={handleResponsibleBlur}
+              onStatusChange={handleStatusChange}
+              onShare={(id, name) => setShareModal({ id, name })}
+              showTopDivider
+              dividerLabel="In Design → Completed"
+              dividerColor="border-lucina-secondary/40"
             />
           </div>
 
@@ -501,6 +538,15 @@ export function ProjectsBoard() {
         onClose={() => setModalOpen(false)}
         onSuccess={loadProjects}
       />
+
+      {shareModal && (
+        <ShareProjectModal
+          isOpen={!!shareModal}
+          projectId={shareModal.id}
+          projectName={shareModal.name}
+          onClose={() => setShareModal(null)}
+        />
+      )}
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import { createClient } from '@/utils/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
 import { randomUUID } from 'crypto';
+import { getAccessibleProjects } from '@/lib/project-access';
 
 export async function GET(request: NextRequest) {
   try {
@@ -12,32 +13,26 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // ...existing code...
-    // Fetch projects for the user
-    const { data: projects, error } = await supabase
-      .from('projects')
-      .select('*')
-      .eq('ownerId', user.id)
-      .order('createdAt', { ascending: false });
-
-    if (error) {
-      // Check if table doesn't exist
-      if (error.message.includes('Could not find the table')) {
+    try {
+      const projects = await getAccessibleProjects(supabase, user.id);
+      return NextResponse.json(projects);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      if (message.includes('Could not find the table')) {
         return NextResponse.json(
-          { 
+          {
             error: 'Database not initialized',
             message: 'Please initialize your database first',
-            redirect: '/setup'
+            redirect: '/setup',
           },
           { status: 503 }
         );
       }
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      throw error;
     }
-
-    return NextResponse.json(projects);
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 
@@ -61,7 +56,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Generate slug from name
     const slug = name
       .toLowerCase()
       .trim()
@@ -115,13 +109,12 @@ export async function POST(request: NextRequest) {
     }
 
     if (error) {
-      // Check if table doesn't exist
       if (error.message.includes('Could not find the table')) {
         return NextResponse.json(
-          { 
+          {
             error: 'Database not initialized',
             message: 'Please initialize your database first',
-            redirect: '/setup'
+            redirect: '/setup',
           },
           { status: 503 }
         );
@@ -129,9 +122,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    return NextResponse.json(project, { status: 201 });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ ...project, isOwner: true, isShared: false }, { status: 201 });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
-

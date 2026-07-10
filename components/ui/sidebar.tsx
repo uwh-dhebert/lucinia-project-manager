@@ -9,7 +9,7 @@ const Sidebar = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
 >(({ className, ...props }, ref) => (
-  <div ref={ref} className={`flex h-screen w-64 bg-slate-900 ${className}`} {...props} />
+  <div ref={ref} className={`flex h-screen w-64 bg-lucina-white border-r border-lucina-rose ${className}`} {...props} />
 ))
 Sidebar.displayName = "Sidebar"
 
@@ -67,7 +67,7 @@ const SidebarMenuButton = React.forwardRef<
   return (
     <Comp
       ref={ref}
-      className={`w-full text-left px-2 py-1.5 rounded-md ${className}`}
+      className={`w-full text-left px-2 py-1.5 rounded-md text-lucina-primary hover:bg-lucina-surface hover:text-lucina-secondary transition-colors ${className}`}
       {...props}
     />
   )
@@ -78,7 +78,11 @@ const SidebarTrigger = React.forwardRef<
   HTMLButtonElement,
   React.ButtonHTMLAttributes<HTMLButtonElement>
 >(({ className, ...props }, ref) => (
-  <button ref={ref} className={className} {...props} />
+  <button
+    ref={ref}
+    className={`p-2 rounded-md hover:bg-lucina-surface text-lucina-primary ${className}`}
+    {...props}
+  />
 ))
 SidebarTrigger.displayName = "SidebarTrigger"
 
@@ -93,4 +97,3 @@ export {
   SidebarMenuButton,
   SidebarTrigger,
 }
-

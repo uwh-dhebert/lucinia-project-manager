@@ -2,13 +2,14 @@
 
 import dynamic from 'next/dynamic';
 import { useState } from 'react';
-import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { createClient } from '@/utils/supabase/client';
+import LinksTreeModal from '@/components/LinksTreeModal';
+import { LucinaLogo } from '@/components/brand/LucinaLogo';
 
 const WikiSidebar = dynamic(
   () => import('@/components/WikiSidebar').then((m) => m.WikiSidebar),
-  { ssr: false, loading: () => <div className="px-4 py-2 text-xs text-slate-400 animate-pulse">Loading wiki...</div> }
+  { ssr: false, loading: () => <div className="px-4 py-2 text-xs text-lucina-cream/70 animate-pulse">Loading wiki...</div> }
 );
 
 const FloatingChatWidget = dynamic(
@@ -21,10 +22,14 @@ interface ProtectedShellProps {
   userEmail: string;
 }
 
+const navLinkClass =
+  'px-3 py-1.5 text-sm font-bold text-lucina-cream hover:text-lucina-rose rounded-lg transition-colors';
+
 export function ProtectedShell({ children, userEmail }: ProtectedShellProps) {
   const router = useRouter();
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [linksModalOpen, setLinksModalOpen] = useState(false);
 
   const isWikiPage = pathname.includes('/wiki');
 
@@ -34,23 +39,51 @@ export function ProtectedShell({ children, userEmail }: ProtectedShellProps) {
     router.push('/auth/login');
   };
 
+  const openLinksModal = () => {
+    setLinksModalOpen(true);
+    setMobileMenuOpen(false);
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex flex-col">
-      <nav className="sticky top-0 z-50 border-b border-slate-700 bg-slate-900/80 backdrop-blur-xl">
-        <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-lucina-accent flex flex-col">
+      <nav className="sticky top-0 z-50 bg-lucina-primary">
+        <div className="max-w-7xl mx-auto px-4 py-3 sm:px-10 lg:px-10">
           <div className="flex justify-between items-center">
-            <Link href="/dashboard" className="flex items-center gap-2 hover:opacity-75 transition">
-              <div className="text-2xl">✨</div>
-              <span className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-                lucina
-              </span>
-            </Link>
+            <div className="flex items-center gap-8">
+              <LucinaLogo href="/dashboard" width={140} height={42} />
+
+              <div className="hidden md:flex items-center gap-2">
+                <a
+                  href="/projects"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={navLinkClass}
+                >
+                  Projects
+                </a>
+                <button
+                  type="button"
+                  onClick={openLinksModal}
+                  className={navLinkClass}
+                >
+                  Links
+                </button>
+                <a
+                  href="/wiki"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={navLinkClass}
+                >
+                  Wiki
+                </a>
+              </div>
+            </div>
 
             <div className="hidden md:flex items-center gap-3">
-              <span className="text-sm text-slate-400 px-3 py-1 bg-slate-800 rounded-full">{userEmail}</span>
+              <span className="text-sm text-lucina-cream px-3 py-1 bg-lucina-dark/40 rounded-full">{userEmail}</span>
               <button
                 onClick={handleLogout}
-                className="px-4 py-2 text-sm font-medium text-slate-300 bg-slate-800 hover:bg-slate-700 rounded-full transition-colors"
+                className="px-4 py-2 text-sm font-bold text-lucina-primary bg-lucina-rose border-2 border-lucina-dark rounded-xl shadow-[0_4px_0_0_#28121C] hover:bg-lucina-rose-hover transition-colors"
               >
                 Logout
               </button>
@@ -58,7 +91,7 @@ export function ProtectedShell({ children, userEmail }: ProtectedShellProps) {
 
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-2 hover:bg-slate-800 rounded-lg text-slate-400"
+              className="md:hidden p-2 hover:bg-lucina-dark rounded-lg text-lucina-cream"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={mobileMenuOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"} />
@@ -67,14 +100,39 @@ export function ProtectedShell({ children, userEmail }: ProtectedShellProps) {
           </div>
 
           {mobileMenuOpen && (
-            <div className="md:hidden mt-4 pt-4 border-t border-slate-700 space-y-2">
-              <div className="text-sm text-slate-400 px-3 py-2">{userEmail}</div>
+            <div className="md:hidden mt-4 pt-4 border-t border-lucina-dark space-y-1">
+              <a
+                href="/projects"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block w-full text-left px-4 py-2 text-sm font-bold text-lucina-cream hover:bg-lucina-dark rounded-lg transition-colors"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Projects
+              </a>
+              <button
+                type="button"
+                onClick={openLinksModal}
+                className="block w-full text-left px-4 py-2 text-sm font-bold text-lucina-cream hover:bg-lucina-dark rounded-lg transition-colors"
+              >
+                Links
+              </button>
+              <a
+                href="/wiki"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block w-full text-left px-4 py-2 text-sm font-bold text-lucina-cream hover:bg-lucina-dark rounded-lg transition-colors"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Wiki
+              </a>
+              <div className="text-sm text-lucina-cream/80 px-3 py-2 border-t border-lucina-dark mt-2 pt-3">{userEmail}</div>
               <button
                 onClick={() => {
                   handleLogout();
                   setMobileMenuOpen(false);
                 }}
-                className="w-full text-left px-4 py-2 text-sm font-medium text-slate-300 bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors"
+                className="w-full text-left px-4 py-2 text-sm font-bold text-lucina-primary bg-lucina-rose hover:bg-lucina-rose-hover rounded-lg transition-colors"
               >
                 Logout
               </button>
@@ -83,9 +141,13 @@ export function ProtectedShell({ children, userEmail }: ProtectedShellProps) {
         </div>
       </nav>
 
+      {linksModalOpen && (
+        <LinksTreeModal onClose={() => setLinksModalOpen(false)} />
+      )}
+
       <div className="flex flex-1">
         {isWikiPage && (
-          <aside className="hidden lg:flex w-64 border-r border-slate-700 bg-slate-900/50 flex-col overflow-hidden">
+          <aside className="hidden lg:flex w-64 border-r border-lucina-rose bg-lucina-white flex-col overflow-hidden">
             <WikiSidebar />
           </aside>
         )}
@@ -95,8 +157,8 @@ export function ProtectedShell({ children, userEmail }: ProtectedShellProps) {
         </main>
       </div>
 
-      <footer className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 text-center text-sm text-slate-500 border-t border-slate-700 mt-12 w-full">
-        <p>© 2026 Lucina. Built with ✨ and Next.js</p>
+      <footer className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 text-center text-sm text-lucina-muted border-t border-lucina-rose mt-12 w-full">
+        <p>© 2026 Lucina. All rights reserved.</p>
       </footer>
       <FloatingChatWidget />
     </div>

@@ -10,32 +10,32 @@ interface MarkdownContentProps {
 
 export function MarkdownContent({ content, className = '' }: MarkdownContentProps) {
   if (!content.trim()) {
-    return <p className="text-slate-500 text-sm italic">Nothing to preview yet.</p>;
+    return <p className="text-lucina-muted text-sm italic">Nothing to preview yet.</p>;
   }
 
   return (
-    <div className={`markdown-content text-slate-300 text-sm leading-relaxed ${className}`}>
+    <div className={`markdown-content text-lucina-secondary text-sm leading-relaxed ${className}`}>
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{
           h1: ({ children }) => (
-            <h1 className="text-2xl font-bold text-white mt-6 mb-3 first:mt-0">{children}</h1>
+            <h1 className="text-2xl font-bold text-lucina-primary mt-6 mb-3 first:mt-0">{children}</h1>
           ),
           h2: ({ children }) => (
-            <h2 className="text-xl font-bold text-white mt-5 mb-2 first:mt-0">{children}</h2>
+            <h2 className="text-xl font-bold text-lucina-primary mt-5 mb-2 first:mt-0">{children}</h2>
           ),
           h3: ({ children }) => (
-            <h3 className="text-lg font-semibold text-white mt-4 mb-2 first:mt-0">{children}</h3>
+            <h3 className="text-lg font-semibold text-lucina-primary mt-4 mb-2 first:mt-0">{children}</h3>
           ),
           p: ({ children }) => <p className="my-2 last:mb-0">{children}</p>,
-          strong: ({ children }) => <strong className="font-semibold text-white">{children}</strong>,
-          em: ({ children }) => <em className="italic text-slate-200">{children}</em>,
+          strong: ({ children }) => <strong className="font-semibold text-lucina-primary">{children}</strong>,
+          em: ({ children }) => <em className="italic text-lucina-primary">{children}</em>,
           a: ({ href, children }) => (
             <a
               href={href}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-blue-400 hover:text-blue-300 hover:underline"
+              className="text-lucina-secondary hover:text-lucina-secondary hover:underline"
             >
               {children}
             </a>
@@ -44,7 +44,7 @@ export function MarkdownContent({ content, className = '' }: MarkdownContentProp
           ol: ({ children }) => <ol className="my-2 list-decimal pl-5 space-y-1">{children}</ol>,
           li: ({ children }) => <li>{children}</li>,
           blockquote: ({ children }) => (
-            <blockquote className="my-3 border-l-4 border-slate-600 pl-4 text-slate-400 italic">
+            <blockquote className="my-3 border-l-4 border-lucina-rose pl-4 text-lucina-muted italic">
               {children}
             </blockquote>
           ),
@@ -52,13 +52,13 @@ export function MarkdownContent({ content, className = '' }: MarkdownContentProp
             const isBlock = codeClassName?.includes('language-');
             if (isBlock) {
               return (
-                <code className="block overflow-x-auto rounded-lg bg-slate-950 border border-slate-700 p-3 text-xs font-mono text-slate-200">
+                <code className="block overflow-x-auto rounded-lg bg-lucina-accent border border-lucina-rose p-3 text-xs font-mono text-lucina-primary">
                   {children}
                 </code>
               );
             }
             return (
-              <code className="rounded bg-slate-900 px-1.5 py-0.5 text-xs font-mono text-blue-300">
+              <code className="rounded bg-lucina-primary px-1.5 py-0.5 text-xs font-mono text-lucina-secondary">
                 {children}
               </code>
             );
@@ -66,20 +66,20 @@ export function MarkdownContent({ content, className = '' }: MarkdownContentProp
           pre: ({ children }) => <pre className="my-3 overflow-x-auto">{children}</pre>,
           table: ({ children }) => (
             <div className="my-3 overflow-x-auto">
-              <table className="min-w-full border-collapse border border-slate-600 text-xs">
+              <table className="min-w-full border-collapse border border-lucina-rose text-xs">
                 {children}
               </table>
             </div>
           ),
           th: ({ children }) => (
-            <th className="border border-slate-600 bg-slate-800 px-3 py-2 text-left font-semibold text-white">
+            <th className="border border-lucina-rose bg-lucina-white px-3 py-2 text-left font-semibold text-lucina-primary">
               {children}
             </th>
           ),
           td: ({ children }) => (
-            <td className="border border-slate-600 px-3 py-2">{children}</td>
+            <td className="border border-lucina-rose px-3 py-2">{children}</td>
           ),
-          hr: () => <hr className="my-4 border-slate-600" />,
+          hr: () => <hr className="my-4 border-lucina-rose" />,
         }}
       >
         {content}

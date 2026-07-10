@@ -1,6 +1,7 @@
 import { createClient } from '@/utils/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 import { PRIORITY_ZONES, type PriorityZone } from '@/lib/project-priorities'
+import { canAccessProject, getProjectAccess, isProjectOwner } from '@/lib/project-access'
 
 export async function PATCH(
   request: NextRequest,
@@ -21,6 +22,11 @@ export async function PATCH(
       return NextResponse.json({ error: 'Project ID is required' }, { status: 400 })
     }
 
+    const access = await getProjectAccess(supabase, user.id, projectId)
+    if (!access) {
+      return NextResponse.json({ error: 'Project not found' }, { status: 404 })
+    }
+
     const body = await request.json()
     const { name, description, responsible, priorityZone } = body
 
@@ -31,12 +37,7 @@ export async function PATCH(
       .single()
 
     if (fetchError || !project) {
-      console.error('Fetch error:', fetchError)
       return NextResponse.json({ error: 'Project not found' }, { status: 404 })
-    }
-
-    if (project.ownerId !== user.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
     }
 
     const now = new Date().toISOString()
@@ -55,17 +56,16 @@ export async function PATCH(
       updates.priorityZone = priorityZone
 
       if (priorityZone !== project.priorityZone) {
-        const { data: existingInZone } = await supabase
+        const { data: zoneProjects } = await supabase
           .from('projects')
           .select('priorityOrder')
-          .eq('ownerId', user.id)
           .eq('priorityZone', priorityZone)
           .order('priorityOrder', { ascending: false })
           .limit(1)
 
         updates.priorityOrder =
-          existingInZone?.[0]?.priorityOrder != null
-            ? existingInZone[0].priorityOrder + 1
+          zoneProjects?.[0]?.priorityOrder != null
+            ? zoneProjects[0].priorityOrder + 1
             : 0
       }
     }
@@ -82,14 +82,17 @@ export async function PATCH(
       .single()
 
     if (error) {
-      console.error('Update error:', error)
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    return NextResponse.json(updated)
-  } catch (error: any) {
-    console.error('PATCH error:', error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({
+      ...updated,
+      isOwner: project.ownerId === user.id,
+      isShared: project.ownerId !== user.id,
+    })
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Unknown error'
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }
 
@@ -112,37 +115,23 @@ export async function DELETE(
       return NextResponse.json({ error: 'Project ID is required' }, { status: 400 })
     }
 
-    // Verify the user owns this project
-    const { data: project, error: fetchError } = await supabase
-      .from('projects')
-      .select('ownerId')
-      .eq('id', projectId)
-      .single()
-
-    if (fetchError || !project) {
-      console.error('Fetch error:', fetchError)
-      return NextResponse.json({ error: 'Project not found' }, { status: 404 })
+    const owner = await isProjectOwner(supabase, user.id, projectId)
+    if (!owner) {
+      return NextResponse.json({ error: 'Only the project owner can delete this project' }, { status: 403 })
     }
 
-    if (project.ownerId !== user.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
-    }
-
-    // Delete project
     const { error } = await supabase
       .from('projects')
       .delete()
       .eq('id', projectId)
 
     if (error) {
-      console.error('Delete error:', error)
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
     return NextResponse.json({ success: true })
-  } catch (error: any) {
-    console.error('DELETE error:', error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Unknown error'
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }
-

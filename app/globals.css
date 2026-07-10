@@ -1,26 +1,118 @@
 @import "tailwindcss";
 
+@font-face {
+  font-family: "Fionas";
+  src: url("/fonts/Fionas-Light.woff") format("woff");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Fionas";
+  src: url("/fonts/Fionas-Regular.woff") format("woff");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Fionas";
+  src: url("/fonts/Fionas-Bold.woff") format("woff");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --lucina-primary: #411e2a;
+  --lucina-secondary: #81525f;
+  --lucina-cream: #dcc7bf;
+  --lucina-accent: #f7f4ef;
+  --lucina-muted: #9ba5b7;
+  --lucina-dark: #28121c;
+  --lucina-white: #ffffff;
+  --lucina-rose: #cda9b3;
+  --lucina-rose-hover: #b68996;
+  --lucina-surface: #f0e8e4;
+  --lucina-card: rgba(220, 199, 191, 0.5);
+
+  --background: var(--lucina-accent);
+  --foreground: var(--lucina-primary);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-lucina-primary: #411e2a;
+  --color-lucina-secondary: #81525f;
+  --color-lucina-cream: #dcc7bf;
+  --color-lucina-accent: #f7f4ef;
+  --color-lucina-muted: #9ba5b7;
+  --color-lucina-dark: #28121c;
+  --color-lucina-white: #ffffff;
+  --color-lucina-rose: #cda9b3;
+  --color-lucina-rose-hover: #b68996;
+  --color-lucina-surface: #f0e8e4;
+  --color-lucina-card: #e8dbd6;
+
+  --font-sans: "Figtree", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Fionas", ui-serif, Georgia, serif;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+}
+
+/* Lucina button style from lucina.com */
+.btn-lucina {
+  background-color: var(--lucina-rose);
+  color: var(--lucina-primary);
+  border: 3px solid var(--lucina-dark);
+  border-radius: 12px;
+  box-shadow: 0 6px 0 0 var(--lucina-dark);
+  font-weight: 700;
+  transition: background-color 0.2s, transform 0.1s;
+}
+
+.btn-lucina:hover:not(:disabled) {
+  background-color: var(--lucina-rose-hover);
+}
+
+.btn-lucina:active:not(:disabled) {
+  transform: translateY(2px);
+  box-shadow: 0 4px 0 0 var(--lucina-dark);
+}
+
+.btn-lucina:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Card surface matching lucina.com sections */
+.lucina-card {
+  background-color: var(--lucina-card);
+  border-radius: 16px;
+}
+
+/* Input fields */
+.lucina-input {
+  background-color: var(--lucina-white);
+  border: 2px solid var(--lucina-rose);
+  border-radius: 12px;
+  color: var(--lucina-primary);
+}
+
+.lucina-input:focus {
+  outline: none;
+  ring: 2px;
+  border-color: var(--lucina-secondary);
+  box-shadow: 0 0 0 2px rgba(129, 82, 95, 0.25);
+}
+
+.lucina-input::placeholder {
+  color: var(--lucina-muted);
 }

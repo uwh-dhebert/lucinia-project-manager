@@ -63,7 +63,7 @@ export default function ResetPasswordPage() {
 
   if (checkingSession) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center text-slate-400">
+      <div className="min-h-screen bg-lucina-accent flex items-center justify-center text-lucina-muted">
         Loading...
       </div>
     );
@@ -75,8 +75,8 @@ export default function ResetPasswordPage() {
         title="Reset link expired"
         subtitle="Request a new password reset link to continue"
         footer={
-          <p className="text-center text-slate-400 text-sm">
-            <Link href="/auth/login" className="text-blue-400 font-semibold hover:text-blue-300 transition-colors">
+          <p className="text-center text-lucina-muted text-sm">
+            <Link href="/auth/login" className="text-lucina-secondary font-semibold hover:text-lucina-secondary transition-colors">
               Back to sign in
             </Link>
           </p>
@@ -89,7 +89,7 @@ export default function ResetPasswordPage() {
           />
           <Link
             href="/auth/forgot-password"
-            className="block w-full py-3 text-center bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-full hover:shadow-lg transition-all"
+            className="block w-full py-3 text-center btn-lucina transition-all"
           >
             Request new link
           </Link>
@@ -103,8 +103,8 @@ export default function ResetPasswordPage() {
       title="Choose a new password"
       subtitle="Enter and confirm your new password"
       footer={
-        <p className="text-center text-slate-400 text-sm">
-          <Link href="/auth/login" className="text-blue-400 font-semibold hover:text-blue-300 transition-colors">
+        <p className="text-center text-lucina-muted text-sm">
+          <Link href="/auth/login" className="text-lucina-secondary font-semibold hover:text-lucina-secondary transition-colors">
             Back to sign in
           </Link>
         </p>
@@ -112,7 +112,7 @@ export default function ResetPasswordPage() {
     >
       <form onSubmit={handleSubmit} className="space-y-5">
         <div>
-          <label htmlFor="password" className="block text-sm font-semibold text-slate-200 mb-2">
+          <label htmlFor="password" className="block text-sm font-semibold text-lucina-primary mb-2">
             New password
           </label>
           <input
@@ -122,13 +122,13 @@ export default function ResetPasswordPage() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="At least 8 characters"
-            className="w-full px-4 py-3 border border-slate-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-slate-700/80 text-white placeholder-slate-500 transition-all"
+            className="w-full px-4 py-3 border border-lucina-rose rounded-xl focus:outline-none focus:ring-2 focus:ring-lucina-secondary focus:border-transparent bg-lucina-white text-lucina-primary placeholder-lucina-muted transition-all"
             disabled={loading}
           />
         </div>
 
         <div>
-          <label htmlFor="confirmPassword" className="block text-sm font-semibold text-slate-200 mb-2">
+          <label htmlFor="confirmPassword" className="block text-sm font-semibold text-lucina-primary mb-2">
             Confirm new password
           </label>
           <input
@@ -138,7 +138,7 @@ export default function ResetPasswordPage() {
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             placeholder="Repeat your new password"
-            className="w-full px-4 py-3 border border-slate-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-slate-700/80 text-white placeholder-slate-500 transition-all"
+            className="w-full px-4 py-3 border border-lucina-rose rounded-xl focus:outline-none focus:ring-2 focus:ring-lucina-secondary focus:border-transparent bg-lucina-white text-lucina-primary placeholder-lucina-muted transition-all"
             disabled={loading}
           />
         </div>
@@ -148,11 +148,11 @@ export default function ResetPasswordPage() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-full hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:scale-[1.02] active:scale-[0.98]"
+          className="w-full py-3 btn-lucina transition-all disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {loading ? (
             <span className="flex items-center justify-center gap-2">
-              <span className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
+              <span className="animate-spin rounded-full h-4 w-4 border-2 border-lucina-cream border-t-transparent" />
               Updating password...
             </span>
           ) : (

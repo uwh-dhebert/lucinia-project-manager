@@ -102,15 +102,15 @@ export function DesignDocumentModal({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-slate-800 border border-slate-700 rounded-2xl w-full max-w-4xl max-h-96 flex flex-col overflow-hidden">
+      <div className="bg-lucina-white border border-lucina-rose rounded-2xl w-full max-w-4xl max-h-96 flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4 flex justify-between items-center">
-          <h3 className="text-xl font-bold text-white">
+        <div className="bg-gradient-to-r from-lucina-rose to-lucina-rose-hover px-6 py-4 flex justify-between items-center">
+          <h3 className="text-xl font-bold text-lucina-primary">
             {markdownContent ? 'Project Design Document' : 'Generate Design Document'}
           </h3>
           <button
             onClick={onClose}
-            className="text-white hover:bg-blue-500 p-1 rounded transition-colors"
+            className="text-lucina-primary hover:bg-lucina-rose-hover p-1 rounded transition-colors"
           >
             <X size={24} />
           </button>
@@ -121,14 +121,14 @@ export function DesignDocumentModal({
           {!markdownContent && !isLoading && !error && (
             <div className="text-center py-12">
               <div className="text-5xl mb-4">📄</div>
-              <h4 className="text-lg font-semibold text-white mb-2">
+              <h4 className="text-lg font-semibold text-lucina-primary mb-2">
                 Generate Project Design Document
               </h4>
-              <p className="text-slate-400 mb-6">
+              <p className="text-lucina-muted mb-6">
                 Use xAI Grok's reasoning model to automatically generate a comprehensive
                 Project Design Document for <strong>{projectName}</strong>
               </p>
-              <div className="space-y-3 text-sm text-slate-400">
+              <div className="space-y-3 text-sm text-lucina-muted">
                 <p>📋 Includes all key sections:</p>
                 <ul className="list-none space-y-1">
                   <li>✓ Problem Statement & Objectives</li>
@@ -143,20 +143,20 @@ export function DesignDocumentModal({
 
           {isLoading && (
             <div className="text-center py-12">
-              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-4"></div>
-              <p className="text-slate-400">Generating document with Grok reasoning model...</p>
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-lucina-secondary mb-4"></div>
+              <p className="text-lucina-muted">Generating document with Grok reasoning model...</p>
             </div>
           )}
 
           {error && (
-            <div className="bg-red-900/30 border border-red-800 rounded-lg p-4">
-              <p className="text-red-400 text-sm">{error}</p>
+            <div className="bg-red-50 border border-red-800 rounded-lg p-4">
+              <p className="text-red-600 text-sm">{error}</p>
             </div>
           )}
 
           {markdownContent && (
-            <div className="bg-slate-900 border border-slate-700 rounded-lg p-4 overflow-auto max-h-96">
-              <div className="text-slate-300 text-sm whitespace-pre-wrap font-mono">
+            <div className="bg-lucina-primary border border-lucina-rose rounded-lg p-4 overflow-auto max-h-96">
+              <div className="text-lucina-secondary text-sm whitespace-pre-wrap font-mono">
                 {markdownContent}
               </div>
             </div>
@@ -165,17 +165,17 @@ export function DesignDocumentModal({
 
         {/* Footer */}
         {markdownContent && (
-          <div className="border-t border-slate-700 bg-slate-900 px-6 py-4 flex gap-3">
+          <div className="border-t border-lucina-rose bg-lucina-primary px-6 py-4 flex gap-3">
             <button
               onClick={handleCopy}
-              className="flex-1 px-4 py-2 bg-slate-700 text-white rounded-lg hover:bg-slate-600 transition-colors flex items-center justify-center gap-2"
+              className="flex-1 px-4 py-2 bg-lucina-surface text-lucina-primary rounded-lg hover:bg-lucina-rose-hover transition-colors flex items-center justify-center gap-2"
             >
               <Copy size={18} />
               {isCopied ? 'Copied!' : 'Copy to Clipboard'}
             </button>
             <button
               onClick={handleDownload}
-              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+              className="flex-1 px-4 py-2 bg-lucina-rose text-lucina-primary rounded-lg hover:bg-lucina-rose-hover transition-colors flex items-center justify-center gap-2"
             >
               <Download size={18} />
               Download as Markdown
@@ -184,7 +184,7 @@ export function DesignDocumentModal({
               <button
                 onClick={handleSave}
                 disabled={isSaving}
-                className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                className="flex-1 px-4 py-2 bg-green-600 text-lucina-primary rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 <Save size={18} />
                 {isSaving ? 'Saving...' : 'Save to Project'}
@@ -194,10 +194,10 @@ export function DesignDocumentModal({
         )}
 
         {!markdownContent && !isLoading && !error && (
-          <div className="border-t border-slate-700 bg-slate-900 px-6 py-4">
+          <div className="border-t border-lucina-rose bg-lucina-primary px-6 py-4">
             <button
               onClick={handleGenerate}
-              className="w-full px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold rounded-lg hover:from-blue-500 hover:to-blue-600 transition-colors"
+              className="w-full px-6 py-3 bg-gradient-to-r from-lucina-rose to-lucina-rose-hover text-lucina-primary font-semibold rounded-lg hover:from-lucina-rose-hover hover:to-lucina-secondary transition-colors"
             >
               🚀 Generate Design Document
             </button>

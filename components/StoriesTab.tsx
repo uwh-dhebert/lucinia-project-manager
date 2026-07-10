@@ -166,21 +166,21 @@ export function StoriesTab({ projectId, designDocContent, onStoriesGenerated }: 
 
   if (stories.length === 0 && !isGenerating && !isLoading) {
     return (
-      <div className="bg-slate-800 border border-slate-700 rounded-2xl p-6 min-h-96 flex flex-col items-center justify-center">
+      <div className="bg-lucina-white border border-lucina-rose rounded-2xl p-6 min-h-96 flex flex-col items-center justify-center">
         <div className="text-4xl mb-4">📖</div>
-        <h3 className="text-lg font-semibold text-white mb-2">Generate User Stories</h3>
-        <p className="text-slate-400 text-center mb-6">
+        <h3 className="text-lg font-semibold text-lucina-primary mb-2">Generate User Stories</h3>
+        <p className="text-lucina-muted text-center mb-6">
           Use Grok's reasoning model to automatically generate user stories from your design document
         </p>
         {error && (
-          <div className="bg-red-900/30 border border-red-800 rounded-lg p-3 mb-6 w-full">
-            <p className="text-red-400 text-sm">{error}</p>
+          <div className="bg-red-50 border border-red-800 rounded-lg p-3 mb-6 w-full">
+            <p className="text-red-600 text-sm">{error}</p>
           </div>
         )}
         <button
           onClick={handleGenerateStories}
           disabled={!designDocContent}
-          className="px-8 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-medium rounded-full hover:from-blue-500 hover:to-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          className="px-8 py-3 bg-gradient-to-r from-lucina-rose to-lucina-rose-hover text-lucina-primary font-medium rounded-full hover:from-lucina-rose-hover hover:to-lucina-secondary transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
         >
           <Zap size={18} />
           Generate Stories from Design Doc
@@ -192,11 +192,11 @@ export function StoriesTab({ projectId, designDocContent, onStoriesGenerated }: 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h3 className="text-xl font-bold text-white">User Stories ({stories.length})</h3>
+        <h3 className="text-xl font-bold text-lucina-primary">User Stories ({stories.length})</h3>
         <div className="flex gap-3">
           <button
             onClick={handleAddStory}
-            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
+            className="px-4 py-2 bg-green-600 text-lucina-primary rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
           >
             <Plus size={18} />
             Add Story
@@ -204,11 +204,11 @@ export function StoriesTab({ projectId, designDocContent, onStoriesGenerated }: 
           <button
             onClick={handleGenerateStories}
             disabled={isGenerating || !designDocContent}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center gap-2"
+            className="px-4 py-2 bg-lucina-rose text-lucina-primary rounded-lg hover:bg-lucina-rose-hover transition-colors disabled:opacity-50 flex items-center gap-2"
           >
             {isGenerating ? (
               <>
-                <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
+                <div className="animate-spin h-4 w-4 border-2 border-lucina-cream border-t-transparent rounded-full"></div>
                 Generating...
               </>
             ) : (
@@ -222,8 +222,8 @@ export function StoriesTab({ projectId, designDocContent, onStoriesGenerated }: 
       </div>
 
       {error && (
-        <div className="bg-red-900/30 border border-red-800 rounded-lg p-4">
-          <p className="text-red-400 text-sm">{error}</p>
+        <div className="bg-red-50 border border-red-800 rounded-lg p-4">
+          <p className="text-red-600 text-sm">{error}</p>
         </div>
       )}
 
@@ -231,15 +231,15 @@ export function StoriesTab({ projectId, designDocContent, onStoriesGenerated }: 
         {stories.map((story, index) => (
           <div
             key={index}
-            className="bg-slate-700 border border-slate-600 rounded-lg overflow-hidden"
+            className="bg-lucina-surface border border-lucina-rose rounded-lg overflow-hidden"
           >
             <button
               onClick={() => setExpandedStory(expandedStory === index ? null : index)}
-              className="w-full px-6 py-4 text-left hover:bg-slate-600/50 transition-colors flex justify-between items-center"
+              className="w-full px-6 py-4 text-left hover:bg-lucina-rose-hover/50 transition-colors flex justify-between items-center"
             >
               <div>
-                <h4 className="font-semibold text-white">{story.title}</h4>
-                <p className="text-sm text-slate-300 mt-1 line-clamp-2">{story.description}</p>
+                <h4 className="font-semibold text-lucina-primary">{story.title}</h4>
+                <p className="text-sm text-lucina-secondary mt-1 line-clamp-2">{story.description}</p>
               </div>
               <div className="text-2xl">
                 {expandedStory === index ? '▼' : '▶'}
@@ -247,9 +247,9 @@ export function StoriesTab({ projectId, designDocContent, onStoriesGenerated }: 
             </button>
 
              {expandedStory === index && (
-               <div className="border-t border-slate-600 px-6 py-4 bg-slate-800 space-y-4">
+               <div className="border-t border-lucina-rose px-6 py-4 bg-lucina-white space-y-4">
                  <div>
-                   <label className="block text-sm font-semibold text-slate-300 mb-2">
+                   <label className="block text-sm font-semibold text-lucina-secondary mb-2">
                      Title
                    </label>
                    <input
@@ -261,12 +261,12 @@ export function StoriesTab({ projectId, designDocContent, onStoriesGenerated }: 
                        setStories(updated);
                        handleUpdateStory(index);
                      }}
-                     className="w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                     className="w-full px-3 py-2 bg-lucina-primary border border-lucina-rose rounded text-lucina-primary text-sm focus:outline-none focus:ring-2 focus:ring-lucina-secondary"
                    />
                  </div>
 
                  <div>
-                   <label className="block text-sm font-semibold text-slate-300 mb-2">
+                   <label className="block text-sm font-semibold text-lucina-secondary mb-2">
                      Description
                    </label>
                    <textarea
@@ -277,13 +277,13 @@ export function StoriesTab({ projectId, designDocContent, onStoriesGenerated }: 
                        setStories(updated);
                        handleUpdateStory(index);
                      }}
-                     className="w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                     className="w-full px-3 py-2 bg-lucina-primary border border-lucina-rose rounded text-lucina-primary text-sm focus:outline-none focus:ring-2 focus:ring-lucina-secondary"
                      rows={3}
                    />
                  </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-slate-300 mb-2">
+                  <label className="block text-sm font-semibold text-lucina-secondary mb-2">
                     Acceptance Criteria
                   </label>
                   <div className="space-y-2">
@@ -299,7 +299,7 @@ export function StoriesTab({ projectId, designDocContent, onStoriesGenerated }: 
                           handleUpdateStory(index);
                         }}
                         placeholder={`Criterion ${idx + 1}`}
-                        className="w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-3 py-2 bg-lucina-primary border border-lucina-rose rounded text-lucina-primary text-sm focus:outline-none focus:ring-2 focus:ring-lucina-secondary"
                       />
                     ))}
                      <button
@@ -309,7 +309,7 @@ export function StoriesTab({ projectId, designDocContent, onStoriesGenerated }: 
                          setStories(updated);
                          handleUpdateStory(index);
                        }}
-                       className="text-sm text-blue-400 hover:text-blue-300"
+                       className="text-sm text-lucina-secondary hover:text-lucina-secondary"
                      >
                        + Add Criterion
                      </button>
@@ -319,7 +319,7 @@ export function StoriesTab({ projectId, designDocContent, onStoriesGenerated }: 
                 <div className="flex justify-end">
                   <button
                     onClick={() => handleRemoveStory(index)}
-                    className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors flex items-center gap-2"
+                    className="px-4 py-2 bg-red-600 text-lucina-primary rounded hover:bg-red-700 transition-colors flex items-center gap-2"
                   >
                     <Trash2 size={16} />
                     Remove Story

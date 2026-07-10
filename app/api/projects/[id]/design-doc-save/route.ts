@@ -4,6 +4,7 @@
 
 import { createClient } from '@/utils/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
+import { canAccessProject } from '@/lib/project-access';
 
 export async function POST(
   request: NextRequest,
@@ -39,7 +40,8 @@ export async function POST(
       .eq('id', projectId)
       .single();
 
-    if (projectError || !project || project.ownerId !== user.id) {
+    const allowed = await canAccessProject(supabase, user.id, projectId);
+    if (projectError || !project || !allowed) {
       return NextResponse.json(
         { error: 'Project not found or unauthorized' },
         { status: 404 }
@@ -118,7 +120,8 @@ export async function GET(
       .eq('id', projectId)
       .single();
 
-    if (projectError || !project || project.ownerId !== user.id) {
+    const allowed = await canAccessProject(supabase, user.id, projectId);
+    if (projectError || !project || !allowed) {
       return NextResponse.json(
         { error: 'Project not found or unauthorized' },
         { status: 404 }

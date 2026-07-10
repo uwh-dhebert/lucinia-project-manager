@@ -94,19 +94,19 @@ export default function ChatPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-4xl font-bold text-white">Project & Wiki Assistant</h1>
-        <p className="text-slate-400 mt-2">Get AI-powered help with your projects and documentation</p>
+        <h1 className="text-4xl font-bold text-lucina-primary">Project & Wiki Assistant</h1>
+        <p className="text-lucina-muted mt-2">Get AI-powered help with your projects and documentation</p>
       </div>
 
-      <div className="border border-slate-700 rounded-2xl overflow-hidden flex flex-col h-96 bg-slate-800">
+      <div className="border border-lucina-rose rounded-2xl overflow-hidden flex flex-col h-96 bg-lucina-white">
         {/* Chat Messages */}
         <div className="flex-1 overflow-y-auto p-6 space-y-4">
           {messages.length === 0 ? (
             <div className="h-full flex items-center justify-center text-center">
               <div>
                 <div className="text-5xl mb-4">💬</div>
-                <h2 className="text-xl font-semibold text-white mb-2">Project & Wiki Assistant</h2>
-                <p className="text-slate-400 text-sm">Ask questions about your projects and documentation</p>
+                <h2 className="text-xl font-semibold text-lucina-primary mb-2">Project & Wiki Assistant</h2>
+                <p className="text-lucina-muted text-sm">Ask questions about your projects and documentation</p>
               </div>
             </div>
           ) : (
@@ -116,13 +116,13 @@ export default function ChatPage() {
                   <div
                     className={`max-w-xs px-4 py-2 rounded-xl ${
                       msg.role === 'user'
-                        ? 'bg-blue-600 text-white rounded-br-none'
-                        : 'bg-slate-700 text-slate-100 rounded-bl-none'
+                        ? 'bg-lucina-rose text-lucina-primary rounded-br-none'
+                        : 'bg-lucina-surface text-lucina-primary rounded-bl-none'
                     }`}
                   >
                     <p>{msg.content}</p>
                     {msg.model && (
-                      <p className="text-xs text-slate-400 mt-1">
+                      <p className="text-xs text-lucina-muted mt-1">
                         {msg.model}
                       </p>
                     )}
@@ -131,11 +131,11 @@ export default function ChatPage() {
               ))}
               {isLoading && (
                 <div className="flex justify-start">
-                  <div className="bg-slate-700 text-slate-100 rounded-xl rounded-bl-none px-4 py-2">
+                  <div className="bg-lucina-surface text-lucina-primary rounded-xl rounded-bl-none px-4 py-2">
                     <div className="flex space-x-2">
-                      <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"></div>
-                      <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                      <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
+                      <div className="w-2 h-2 bg-lucina-muted rounded-full animate-bounce"></div>
+                      <div className="w-2 h-2 bg-lucina-muted rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                      <div className="w-2 h-2 bg-lucina-muted rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
                     </div>
                   </div>
                 </div>
@@ -147,13 +147,13 @@ export default function ChatPage() {
 
         {/* Error message */}
         {error && (
-          <div className="border-t border-slate-700 bg-red-900/30 border-red-800 p-3">
-            <p className="text-sm text-red-300">Error: {error}</p>
+          <div className="border-t border-lucina-rose bg-red-50 border-red-800 p-3">
+            <p className="text-sm text-red-700">Error: {error}</p>
           </div>
         )}
 
         {/* Input */}
-        <div className="border-t border-slate-700 p-4 bg-slate-900">
+        <div className="border-t border-lucina-rose p-4 bg-lucina-primary">
           <div className="flex gap-2">
             <input
               type="text"
@@ -161,13 +161,13 @@ export default function ChatPage() {
               onChange={(e) => setInput(e.target.value)}
               onKeyPress={handleKeyPress}
               placeholder="Type your message... (Press Enter to send)"
-              className="flex-1 px-4 py-2 border border-slate-600 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-800 text-white placeholder-slate-500 disabled:bg-slate-700"
+              className="flex-1 px-4 py-2 border border-lucina-rose rounded-full focus:outline-none focus:ring-2 focus:ring-lucina-secondary bg-lucina-white text-lucina-primary placeholder-lucina-muted disabled:bg-lucina-surface"
               disabled={isLoading}
             />
             <button
               onClick={handleSendMessage}
               disabled={isLoading || !input.trim()}
-              className="px-6 py-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-6 py-2 bg-lucina-rose text-lucina-primary rounded-full hover:bg-lucina-rose-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? '...' : 'Send'}
             </button>
@@ -175,11 +175,11 @@ export default function ChatPage() {
         </div>
       </div>
 
-      <div className="bg-blue-900/30 border border-blue-800 rounded-2xl p-6">
-        <p className="text-sm text-blue-300 mb-3">
+      <div className="bg-lucina-surface border border-lucina-rose rounded-2xl p-6">
+        <p className="text-sm text-lucina-secondary mb-3">
           💡 <strong>Tip:</strong> This chatbot helps with your projects and wiki content only.
         </p>
-        <p className="text-xs text-blue-300">
+        <p className="text-xs text-lucina-secondary">
           You can ask about: project management, tasks, documentation, wiki topics, and content organization.
         </p>
       </div>
