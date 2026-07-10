@@ -6,6 +6,10 @@
 import { createClient } from '@/utils/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
 import { canAccessProject } from '@/lib/project-access';
+import {
+  nextDesignDocVersion,
+  withDesignDocMetadata,
+} from '@/lib/design-doc';
 
 export async function POST(
   request: NextRequest,
@@ -24,6 +28,11 @@ export async function POST(
     }
 
     const { id: projectId } = await params;
+    const body = await request.json().catch(() => ({}));
+    const baseContent =
+      typeof body.baseContent === 'string' && body.baseContent.trim()
+        ? body.baseContent
+        : undefined;
 
     // Fetch project details
     const allowed = await canAccessProject(supabase, user.id, projectId);
@@ -47,8 +56,17 @@ export async function POST(
       );
     }
 
+    const { data: existingDoc } = await supabase
+      .from('project_design_docs')
+      .select('content')
+      .eq('project_id', projectId)
+      .maybeSingle();
+
+    const versionSource = baseContent ?? existingDoc?.content;
+    const version = versionSource ? nextDesignDocVersion(versionSource) : '1.0';
+
     // Prepare the prompt for Grok's reasoning model
-    const prompt = buildDesignDocumentPrompt(project);
+    const prompt = buildDesignDocumentPrompt(project, version);
 
     // Call Grok with the full reasoning model (not lite)
     const response = await fetch('https://api.x.ai/v1/chat/completions', {
@@ -82,12 +100,18 @@ export async function POST(
     }
 
     const data = await response.json();
-    const document = data.choices?.[0]?.message?.content || '';
+    const generatedBody = data.choices?.[0]?.message?.content || '';
+    const document = withDesignDocMetadata(generatedBody, {
+      projectName: project.name,
+      version,
+      updatedAt: new Date(),
+    });
 
     return NextResponse.json(
       {
         success: true,
         document,
+        version,
         project: {
           id: project.id,
           name: project.name,
@@ -113,16 +137,17 @@ export async function POST(
   }
 }
 
-function buildDesignDocumentPrompt(project: any): string {
+function buildDesignDocumentPrompt(project: any, version: string): string {
   return `Generate a comprehensive Project Design Document for the following project:
 
 Project Name: ${project.name}
 Project Description: ${project.description || 'Not provided'}
 Project ID: ${project.id}
+Document Version: ${version}
+
+Important: Do NOT include a document title, version number, last updated date, or status header. Those will be added separately. Start directly with the Overview section.
 
 Use this template structure:
-
-# ${project.name} - Project Design Document
 
 ## Overview
 

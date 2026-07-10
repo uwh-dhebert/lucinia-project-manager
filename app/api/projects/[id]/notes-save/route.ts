@@ -6,6 +6,7 @@ import { createClient } from '@/utils/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
 import { randomUUID } from 'crypto';
 import { canAccessProject } from '@/lib/project-access';
+import { mapNoteRow } from '@/lib/notes';
 
 export async function GET(
   request: NextRequest,
@@ -48,7 +49,9 @@ export async function GET(
 
     if (error) throw error;
 
-    return NextResponse.json({ notes: notes || [] });
+    return NextResponse.json({
+      notes: (notes ?? []).map((note) => mapNoteRow(note as Record<string, unknown>)),
+    });
   } catch (error: any) {
     console.error('Error fetching notes:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -111,7 +114,7 @@ export async function POST(
 
     return NextResponse.json({
       success: true,
-      note,
+      note: mapNoteRow(note as Record<string, unknown>),
     });
   } catch (error: any) {
     console.error('Error creating note:', error);
@@ -159,7 +162,7 @@ export async function PUT(
 
     return NextResponse.json({
       success: true,
-      note: updatedNote,
+      note: mapNoteRow(updatedNote as Record<string, unknown>),
     });
   } catch (error: any) {
     console.error('Error updating note:', error);

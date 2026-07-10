@@ -1,12 +1,8 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-
-interface AppUser {
-  id: string;
-  email: string;
-  fullName: string | null;
-}
+import { UserSelect } from '@/components/UserSelect';
+import { getUserDisplayName, type AppUser } from '@/lib/users';
 
 interface ProjectMember {
   id: string;
@@ -48,35 +44,42 @@ export function ShareProjectModal({
     setLoading(true);
     setError('');
     try {
-      let membersRes = await fetch(`/api/projects/${projectId}/members`);
+      const fetchMembers = () => fetch(`/api/projects/${projectId}/members`);
 
-      if (membersRes.ok) {
-        const data = await membersRes.json();
-        if (data.tableMissing) {
-          const setupRes = await fetch('/api/setup-sharing', { method: 'POST' });
-          if (setupRes.ok) {
-            membersRes = await fetch(`/api/projects/${projectId}/members`);
-          }
+      let membersRes = await fetchMembers();
+      let membersData: { members?: ProjectMember[]; tableMissing?: boolean; error?: string } =
+        membersRes.ok
+          ? await membersRes.json()
+          : await membersRes.json().catch(() => ({ error: 'Failed to load members' }));
+
+      if (membersRes.ok && membersData.tableMissing) {
+        const setupRes = await fetch('/api/setup-sharing', { method: 'POST' });
+        if (setupRes.ok) {
+          membersRes = await fetchMembers();
+          membersData = membersRes.ok
+            ? await membersRes.json()
+            : await membersRes.json().catch(() => ({ error: 'Failed to load members' }));
         }
       }
 
       const usersRes = await fetch('/api/users');
-
       if (usersRes.ok) {
         setUsers(await usersRes.json());
+      } else {
+        const usersData = await usersRes.json().catch(() => ({}));
+        setError(usersData.error || 'Failed to load users');
       }
 
       if (membersRes.ok) {
-        const data = await membersRes.json();
-        setMembers(data.members ?? []);
-        if (data.tableMissing) {
+        setMembers(membersData.members ?? []);
+        if (membersData.tableMissing) {
           setError('Sharing setup is still initializing. Wait a few seconds and reopen this dialog.');
         }
       } else {
-        const data = await membersRes.json();
-        setError(data.error || 'Failed to load members');
+        setError(membersData.error || 'Failed to load members');
       }
-    } catch {
+    } catch (err) {
+      console.error('Failed to load sharing data:', err);
       setError('Failed to load sharing data');
     } finally {
       setLoading(false);
@@ -156,19 +159,14 @@ export function ShareProjectModal({
         )}
 
         <div className="flex gap-2">
-          <select
+          <UserSelect
+            users={availableUsers}
             value={selectedUserId}
-            onChange={(e) => setSelectedUserId(e.target.value)}
+            onChange={setSelectedUserId}
+            placeholder="Select a user..."
             className="flex-1 px-3 py-2 border border-lucina-rose rounded-xl bg-lucina-surface text-lucina-primary focus:outline-none focus:ring-2 focus:ring-lucina-secondary"
             disabled={loading || availableUsers.length === 0}
-          >
-            <option value="">Select a user...</option>
-            {availableUsers.map((user) => (
-              <option key={user.id} value={user.id}>
-                {user.fullName ? `${user.fullName} (${user.email})` : user.email}
-              </option>
-            ))}
-          </select>
+          />
           <button
             type="button"
             onClick={handleAdd}
@@ -196,11 +194,8 @@ export function ShareProjectModal({
                 >
                   <div className="min-w-0">
                     <p className="text-sm font-medium text-lucina-primary truncate">
-                      {member.fullName || member.email}
+                      {getUserDisplayName(member)}
                     </p>
-                    {member.fullName && (
-                      <p className="text-xs text-lucina-muted truncate">{member.email}</p>
-                    )}
                   </div>
                   <button
                     type="button"

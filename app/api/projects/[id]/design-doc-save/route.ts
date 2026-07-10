@@ -5,6 +5,10 @@
 import { createClient } from '@/utils/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
 import { canAccessProject } from '@/lib/project-access';
+import {
+  parseDesignDocVersion,
+  withDesignDocMetadata,
+} from '@/lib/design-doc';
 
 export async function POST(
   request: NextRequest,
@@ -24,7 +28,7 @@ export async function POST(
 
     const { id: projectId } = await params;
     const body = await request.json();
-    const { content } = body;
+    const { content } = body as { content?: string };
 
     if (!content) {
       return NextResponse.json(
@@ -33,10 +37,9 @@ export async function POST(
       );
     }
 
-    // Verify project exists and user owns it
     const { data: project, error: projectError } = await supabase
       .from('projects')
-      .select('ownerId')
+      .select('ownerId, name')
       .eq('id', projectId)
       .single();
 
@@ -51,16 +54,22 @@ export async function POST(
     // Check if design doc already exists
     const { data: existingDoc } = await supabase
       .from('project_design_docs')
-      .select('id')
+      .select('id, content')
       .eq('project_id', projectId)
-      .single();
+      .maybeSingle();
+
+    const savedAt = new Date();
+    const normalizedContent = withDesignDocMetadata(content, {
+      projectName: project.name,
+      version: parseDesignDocVersion(content),
+      updatedAt: savedAt,
+    });
 
     let result;
     if (existingDoc) {
-      // Update existing
       const { data, error } = await supabase
         .from('project_design_docs')
-        .update({ content, updated_at: new Date().toISOString() })
+        .update({ content: normalizedContent, updated_at: savedAt.toISOString() })
         .eq('project_id', projectId)
         .select()
         .single();
@@ -71,7 +80,7 @@ export async function POST(
         .from('project_design_docs')
         .insert({
           project_id: projectId,
-          content,
+          content: normalizedContent,
         })
         .select()
         .single();
@@ -133,9 +142,9 @@ export async function GET(
       .from('project_design_docs')
       .select('*')
       .eq('project_id', projectId)
-      .single();
+      .maybeSingle();
 
-    if (error && error.code !== 'PGRST116') {
+    if (error) {
       throw error;
     }
 

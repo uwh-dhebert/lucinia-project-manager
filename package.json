@@ -11,7 +11,9 @@
     "start": "next start",
     "lint": "eslint",
     "setup": "prisma db push",
-    "setup:sharing": "node scripts/setup-sharing.mjs"
+    "setup:sharing": "node scripts/setup-sharing.mjs",
+    "setup:todos": "node scripts/setup-todos.mjs",
+    "setup:summary": "node scripts/setup-summary.mjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

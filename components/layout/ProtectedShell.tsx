@@ -19,13 +19,13 @@ const FloatingChatWidget = dynamic(
 
 interface ProtectedShellProps {
   children: React.ReactNode;
-  userEmail: string;
+  userName: string;
 }
 
 const navLinkClass =
   'px-3 py-1.5 text-sm font-bold text-lucina-cream hover:text-lucina-rose rounded-lg transition-colors';
 
-export function ProtectedShell({ children, userEmail }: ProtectedShellProps) {
+export function ProtectedShell({ children, userName }: ProtectedShellProps) {
   const router = useRouter();
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -80,7 +80,7 @@ export function ProtectedShell({ children, userEmail }: ProtectedShellProps) {
             </div>
 
             <div className="hidden md:flex items-center gap-3">
-              <span className="text-sm text-lucina-cream px-3 py-1 bg-lucina-dark/40 rounded-full">{userEmail}</span>
+              <span className="text-sm text-lucina-cream px-3 py-1 bg-lucina-dark/40 rounded-full">{userName}</span>
               <button
                 onClick={handleLogout}
                 className="px-4 py-2 text-sm font-bold text-lucina-primary bg-lucina-rose border-2 border-lucina-dark rounded-xl shadow-[0_4px_0_0_#28121C] hover:bg-lucina-rose-hover transition-colors"
@@ -126,7 +126,7 @@ export function ProtectedShell({ children, userEmail }: ProtectedShellProps) {
               >
                 Wiki
               </a>
-              <div className="text-sm text-lucina-cream/80 px-3 py-2 border-t border-lucina-dark mt-2 pt-3">{userEmail}</div>
+              <div className="text-sm text-lucina-cream/80 px-3 py-2 border-t border-lucina-dark mt-2 pt-3">{userName}</div>
               <button
                 onClick={() => {
                   handleLogout();

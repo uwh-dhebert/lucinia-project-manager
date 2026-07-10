@@ -5,9 +5,13 @@ import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { EditProjectModal } from '@/components/EditProjectModal'
 import { DesignDocumentModal } from '@/components/DesignDocumentModal'
+import { MarkdownEditor } from '@/components/MarkdownEditor'
 import { MarkdownRenderer } from '@/components/MarkdownRenderer'
+import { formatDesignDocDate, getDesignDocBody, parseDesignDocVersion } from '@/lib/design-doc'
 import { StoriesTab } from '@/components/StoriesTab'
 import { NotesTab } from '@/components/NotesTab'
+import { SummaryTab } from '@/components/SummaryTab'
+import { TodoTab } from '@/components/TodoTab'
 import { ActionsMenu } from '@/components/ActionsMenu'
 import { ShareProjectModal } from '@/components/ShareProjectModal'
 
@@ -33,8 +37,10 @@ export default function ProjectDetailPage() {
   const [editModalOpen, setEditModalOpen] = useState(false)
   const [shareModalOpen, setShareModalOpen] = useState(false)
   const [designDocModalOpen, setDesignDocModalOpen] = useState(false)
-  const [activeTab, setActiveTab] = useState<'notes' | 'design-doc' | 'stories'>('notes')
+  const [designDocRegenerate, setDesignDocRegenerate] = useState(false)
+  const [activeTab, setActiveTab] = useState<'summary' | 'notes' | 'todo' | 'design-doc' | 'stories'>('summary')
   const [designDocContent, setDesignDocContent] = useState<string>('')
+  const [designDocUpdatedAt, setDesignDocUpdatedAt] = useState<string | null>(null)
   const [isEditingDesignDoc, setIsEditingDesignDoc] = useState(false)
 
   useEffect(() => {
@@ -74,11 +80,46 @@ export default function ProjectDetailPage() {
         const data = await response.json()
         if (data.designDoc?.content) {
           setDesignDocContent(data.designDoc.content)
+          setDesignDocUpdatedAt(data.designDoc.updated_at ?? null)
+        } else {
+          setDesignDocContent('')
+          setDesignDocUpdatedAt(null)
         }
       }
     } catch (err) {
       console.error('Error loading design doc:', err)
     }
+  }
+
+  const saveDesignDoc = async (content: string) => {
+    if (!project?.id) return null
+    try {
+      const response = await fetch(`/api/projects/${project.id}/design-doc-save`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content }),
+      })
+      if (response.ok) {
+        const data = await response.json()
+        return data.designDoc as { content: string; updated_at: string }
+      }
+    } catch (err) {
+      console.error('Error saving design doc:', err)
+    }
+    return null
+  }
+
+  const applyDesignDoc = (designDoc: { content: string; updated_at?: string | null }) => {
+    setDesignDocContent(designDoc.content)
+    setDesignDocUpdatedAt(designDoc.updated_at ?? null)
+  }
+
+  const handleToggleDesignDocEdit = async () => {
+    if (isEditingDesignDoc) {
+      const saved = await saveDesignDoc(designDocContent)
+      if (saved) applyDesignDoc(saved)
+    }
+    setIsEditingDesignDoc(!isEditingDesignDoc)
   }
 
   const handleDelete = async () => {
@@ -163,6 +204,16 @@ export default function ProjectDetailPage() {
       <div className="space-y-6">
         <div className="flex gap-4 border-b border-lucina-rose">
           <button
+            onClick={() => setActiveTab('summary')}
+            className={`px-6 py-3 font-semibold transition-colors ${
+              activeTab === 'summary'
+                ? 'text-lucina-secondary border-b-2 border-lucina-secondary'
+                : 'text-lucina-muted hover:text-lucina-secondary'
+            }`}
+          >
+            📋 Summary
+          </button>
+          <button
             onClick={() => setActiveTab('notes')}
             className={`px-6 py-3 font-semibold transition-colors ${
               activeTab === 'notes'
@@ -171,6 +222,16 @@ export default function ProjectDetailPage() {
             }`}
           >
             📝 Notes
+          </button>
+          <button
+            onClick={() => setActiveTab('todo')}
+            className={`px-6 py-3 font-semibold transition-colors ${
+              activeTab === 'todo'
+                ? 'text-lucina-secondary border-b-2 border-lucina-secondary'
+                : 'text-lucina-muted hover:text-lucina-secondary'
+            }`}
+          >
+            ✅ Todo
           </button>
           <button
             onClick={() => setActiveTab('design-doc')}
@@ -195,9 +256,21 @@ export default function ProjectDetailPage() {
         </div>
 
         {/* Tab Content */}
+        {activeTab === 'summary' && (
+          <div className="bg-lucina-white border border-lucina-rose rounded-2xl p-6 min-h-96">
+            <SummaryTab projectId={project.id} />
+          </div>
+        )}
+
         {activeTab === 'notes' && (
           <div className="bg-lucina-white border border-lucina-rose rounded-2xl p-6 min-h-96">
             <NotesTab projectId={project.id} />
+          </div>
+        )}
+
+        {activeTab === 'todo' && (
+          <div className="bg-lucina-white border border-lucina-rose rounded-2xl p-6 min-h-96">
+            <TodoTab projectId={project.id} />
           </div>
         )}
 
@@ -205,11 +278,29 @@ export default function ProjectDetailPage() {
           <div className="bg-lucina-white border border-lucina-rose rounded-2xl p-6 min-h-96">
             {designDocContent ? (
               <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <h3 className="text-xl font-bold text-lucina-primary">Project Design Document</h3>
-                  <div className="flex gap-2">
+                <div className="flex justify-between items-start gap-4">
+                  <div>
+                    <h3 className="text-xl font-bold text-lucina-primary">Project Design Document</h3>
+                    <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-lucina-muted">
+                      <span>
+                        Document Version:{' '}
+                        <span className="font-medium text-lucina-primary">
+                          {parseDesignDocVersion(designDocContent)}
+                        </span>
+                      </span>
+                      {formatDesignDocDate(designDocUpdatedAt) && (
+                        <span>
+                          Last Updated:{' '}
+                          <span className="font-medium text-lucina-primary">
+                            {formatDesignDocDate(designDocUpdatedAt)}
+                          </span>
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex gap-2 shrink-0">
                     <button
-                      onClick={() => setIsEditingDesignDoc(!isEditingDesignDoc)}
+                      onClick={handleToggleDesignDocEdit}
                       className={`px-4 py-2 rounded-lg transition-colors font-medium ${
                         isEditingDesignDoc
                           ? 'bg-green-600 hover:bg-green-700 text-lucina-primary'
@@ -219,7 +310,10 @@ export default function ProjectDetailPage() {
                       {isEditingDesignDoc ? '✓ Done Editing' : '✏️ Edit'}
                     </button>
                     <button
-                      onClick={() => setDesignDocModalOpen(true)}
+                      onClick={() => {
+                        setDesignDocRegenerate(true)
+                        setDesignDocModalOpen(true)
+                      }}
                       className="px-4 py-2 bg-lucina-rose text-lucina-primary rounded-lg hover:bg-lucina-rose-hover transition-colors font-medium"
                     >
                       🔄 Regenerate
@@ -228,26 +322,15 @@ export default function ProjectDetailPage() {
                 </div>
 
                 {isEditingDesignDoc ? (
-                  <textarea
+                  <MarkdownEditor
                     value={designDocContent}
-                    onChange={(e) => setDesignDocContent(e.target.value)}
-                    onBlur={async () => {
-                      // Save to database when editing is done
-                      try {
-                        await fetch(`/api/projects/${project?.id}/design-doc-save`, {
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({ content: designDocContent }),
-                        });
-                      } catch (err) {
-                        console.error('Error saving design doc:', err);
-                      }
-                    }}
-                    className="w-full h-96 px-4 py-3 bg-lucina-primary border border-lucina-rose rounded-lg text-lucina-primary font-mono text-sm focus:outline-none focus:ring-2 focus:ring-lucina-secondary"
+                    onChange={setDesignDocContent}
+                    placeholder="Edit design document in markdown..."
+                    minRows={16}
                   />
                 ) : (
-                  <div className="bg-lucina-primary border border-lucina-rose rounded-lg p-4 overflow-auto max-h-96 text-lucina-secondary text-sm">
-                    <MarkdownRenderer content={designDocContent} />
+                  <div className="bg-lucina-surface border border-lucina-rose rounded-lg p-4 overflow-auto">
+                    <MarkdownRenderer content={getDesignDocBody(designDocContent)} />
                   </div>
                 )}
               </div>
@@ -257,7 +340,10 @@ export default function ProjectDetailPage() {
                 <h3 className="text-lg font-semibold text-lucina-primary mb-2">No Design Document</h3>
                 <p className="text-lucina-muted mb-6">Generate a design document to get started</p>
                 <button
-                  onClick={() => setDesignDocModalOpen(true)}
+                  onClick={() => {
+                    setDesignDocRegenerate(false)
+                    setDesignDocModalOpen(true)
+                  }}
                   className="px-6 py-2 bg-gradient-to-r from-lucina-rose to-lucina-rose-hover text-lucina-primary font-medium rounded-full hover:from-lucina-rose-hover hover:to-lucina-secondary transition-colors"
                 >
                   🚀 Generate Design Doc
@@ -300,15 +386,19 @@ export default function ProjectDetailPage() {
        {/* Design Document Modal */}
        <DesignDocumentModal
          isOpen={designDocModalOpen}
-         onClose={() => setDesignDocModalOpen(false)}
+         regenerateOnOpen={designDocRegenerate}
+         existingContent={designDocContent}
+         onClose={() => {
+           setDesignDocModalOpen(false)
+           setDesignDocRegenerate(false)
+         }}
          projectName={project.name}
          projectId={project.id}
-          onSave={async (content) => {
-            setDesignDocContent(content)
-            setDesignDocModalOpen(false)
-            // Reload design doc to ensure it's synced
-            setTimeout(() => loadDesignDoc(), 500)
-          }}
+         onSave={async (designDoc) => {
+           applyDesignDoc(designDoc)
+           setDesignDocModalOpen(false)
+           setDesignDocRegenerate(false)
+         }}
        />
      </div>
    )

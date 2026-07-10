@@ -23,6 +23,8 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { CreateProjectModal } from '@/components/CreateProjectModal';
 import { ShareProjectModal } from '@/components/ShareProjectModal';
+import { UserSelect } from '@/components/UserSelect';
+import { getUserDisplayName, type AppUser } from '@/lib/users';
 import {
   PRIORITY_ZONES,
   ZONE_BADGE_COLORS,
@@ -51,15 +53,25 @@ function ZoneDivider({ label, color }: { label: string; color: string }) {
   );
 }
 
+function resolveResponsibleUserId(responsible: string, users: AppUser[]): string {
+  if (!responsible) return '';
+  if (users.some((u) => u.id === responsible)) return responsible;
+  const byName = users.find(
+    (u) => getUserDisplayName(u).toLowerCase() === responsible.toLowerCase()
+  );
+  return byName?.id ?? '';
+}
+
 interface ProjectCardProps {
   item: ProjectPriorityItem;
-  onResponsibleBlur: (id: string, responsible: string) => void;
+  users: AppUser[];
+  onResponsibleChange: (id: string, responsible: string) => void;
   onStatusChange: (id: string, zone: PriorityZone) => void;
   onShare?: (id: string, name: string) => void;
   isDragging?: boolean;
 }
 
-function ProjectCard({ item, onResponsibleBlur, onStatusChange, onShare, isDragging }: ProjectCardProps) {
+function ProjectCard({ item, users, onResponsibleChange, onStatusChange, onShare, isDragging }: ProjectCardProps) {
   const {
     attributes,
     listeners,
@@ -132,12 +144,13 @@ function ProjectCard({ item, onResponsibleBlur, onStatusChange, onShare, isDragg
 
         <div>
           <label className="block text-xs font-medium text-lucina-muted mb-1">Responsible</label>
-          <input
-            type="text"
-            defaultValue={item.responsible}
-            onBlur={(e) => onResponsibleBlur(item.id, e.target.value)}
-            placeholder="Unassigned"
-            className="w-full rounded-lg border border-lucina-rose bg-lucina-surface px-2.5 py-1.5 text-sm text-lucina-primary placeholder-lucina-muted focus:outline-none focus:ring-2 focus:ring-lucina-secondary"
+          <UserSelect
+            users={users}
+            value={resolveResponsibleUserId(item.responsible, users)}
+            onChange={(userId) => onResponsibleChange(item.id, userId)}
+            allowUnassigned
+            className="w-full rounded-lg border border-lucina-rose bg-lucina-surface px-2.5 py-1.5 text-sm text-lucina-primary focus:outline-none focus:ring-2 focus:ring-lucina-secondary"
+            disabled={isDragging}
           />
         </div>
 
@@ -158,7 +171,8 @@ function ProjectCard({ item, onResponsibleBlur, onStatusChange, onShare, isDragg
 function ZoneSection({
   zone,
   items,
-  onResponsibleBlur,
+  users,
+  onResponsibleChange,
   onStatusChange,
   onShare,
   showTopDivider,
@@ -167,7 +181,8 @@ function ZoneSection({
 }: {
   zone: PriorityZone;
   items: ProjectPriorityItem[];
-  onResponsibleBlur: (id: string, responsible: string) => void;
+  users: AppUser[];
+  onResponsibleChange: (id: string, responsible: string) => void;
   onStatusChange: (id: string, zone: PriorityZone) => void;
   onShare?: (id: string, name: string) => void;
   showTopDivider?: boolean;
@@ -207,7 +222,8 @@ function ZoneSection({
                 <ProjectCard
                   key={item.id}
                   item={item}
-                  onResponsibleBlur={onResponsibleBlur}
+                  users={users}
+                  onResponsibleChange={onResponsibleChange}
                   onStatusChange={onStatusChange}
                   onShare={onShare}
                 />
@@ -222,6 +238,7 @@ function ZoneSection({
 
 export function ProjectsBoard() {
   const [items, setItems] = useState<ProjectPriorityItem[]>([]);
+  const [users, setUsers] = useState<AppUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
@@ -256,9 +273,21 @@ export function ProjectsBoard() {
     }
   }, []);
 
+  const loadUsers = useCallback(async () => {
+    try {
+      const response = await fetch('/api/users?includeSelf=true');
+      if (response.ok) {
+        setUsers((await response.json()) as AppUser[]);
+      }
+    } catch (error) {
+      console.error('Failed to load users:', error);
+    }
+  }, []);
+
   useEffect(() => {
     loadProjects();
-  }, [loadProjects]);
+    loadUsers();
+  }, [loadProjects, loadUsers]);
 
   const persistOrder = async (nextGrouped: Record<PriorityZone, ProjectPriorityItem[]>) => {
     const flattened = flattenZones(nextGrouped);
@@ -385,17 +414,16 @@ export function ProjectsBoard() {
     return response.ok ? response.json() : null;
   };
 
-  const handleResponsibleBlur = async (id: string, responsible: string) => {
+  const handleResponsibleChange = async (id: string, responsible: string) => {
     const current = items.find((item) => item.id === id);
-    if (!current || current.responsible === responsible.trim()) return;
+    if (!current || current.responsible === responsible) return;
 
-    const trimmed = responsible.trim();
     setItems((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, responsible: trimmed } : item))
+      prev.map((item) => (item.id === id ? { ...item, responsible } : item))
     );
 
     try {
-      await patchProject(id, { responsible: trimmed });
+      await patchProject(id, { responsible });
     } catch (error) {
       console.error('Failed to update responsible:', error);
       loadProjects();
@@ -481,7 +509,8 @@ export function ProjectsBoard() {
             <ZoneSection
               zone="active"
               items={grouped.active}
-              onResponsibleBlur={handleResponsibleBlur}
+              users={users}
+              onResponsibleChange={handleResponsibleChange}
               onStatusChange={handleStatusChange}
               onShare={(id, name) => setShareModal({ id, name })}
             />
@@ -489,7 +518,8 @@ export function ProjectsBoard() {
             <ZoneSection
               zone="prioritized"
               items={grouped.prioritized}
-              onResponsibleBlur={handleResponsibleBlur}
+              users={users}
+              onResponsibleChange={handleResponsibleChange}
               onStatusChange={handleStatusChange}
               onShare={(id, name) => setShareModal({ id, name })}
               showTopDivider
@@ -500,7 +530,8 @@ export function ProjectsBoard() {
             <ZoneSection
               zone="in_design"
               items={grouped.in_design}
-              onResponsibleBlur={handleResponsibleBlur}
+              users={users}
+              onResponsibleChange={handleResponsibleChange}
               onStatusChange={handleStatusChange}
               onShare={(id, name) => setShareModal({ id, name })}
               showTopDivider
@@ -511,7 +542,8 @@ export function ProjectsBoard() {
             <ZoneSection
               zone="completed"
               items={grouped.completed}
-              onResponsibleBlur={handleResponsibleBlur}
+              users={users}
+              onResponsibleChange={handleResponsibleChange}
               onStatusChange={handleStatusChange}
               onShare={(id, name) => setShareModal({ id, name })}
               showTopDivider
@@ -524,7 +556,8 @@ export function ProjectsBoard() {
             {activeItem ? (
               <ProjectCard
                 item={activeItem}
-                onResponsibleBlur={() => {}}
+                users={users}
+                onResponsibleChange={() => {}}
                 onStatusChange={() => {}}
                 isDragging
               />

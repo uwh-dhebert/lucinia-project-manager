@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Trash2, Plus, Edit2, Check, X } from 'lucide-react';
 import { MarkdownEditor } from '@/components/MarkdownEditor';
 import { MarkdownRenderer } from '@/components/MarkdownRenderer';
+import { formatNoteTimestamp } from '@/lib/notes';
 
 interface Note {
   id: string;
@@ -197,11 +198,7 @@ export function NotesTab({ projectId }: NotesTabProps) {
                   <MarkdownRenderer content={note.content} />
                   <div className="flex justify-between items-center border-t border-lucina-rose pt-3">
                     <p className="text-xs text-lucina-muted">
-                      {new Date(note.updatedAt || note.createdAt).toLocaleDateString()} at{' '}
-                      {new Date(note.updatedAt || note.createdAt).toLocaleTimeString([], {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
+                      {formatNoteTimestamp(note.updatedAt || note.createdAt)}
                     </p>
                     <div className="flex gap-2">
                       <button

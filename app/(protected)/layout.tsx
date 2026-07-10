@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/utils/supabase/server';
 import { ProtectedShell } from '@/components/layout/ProtectedShell';
+import { getAuthUserDisplayName } from '@/lib/users';
 
 export default async function DashboardLayout({
   children,
@@ -14,8 +15,10 @@ export default async function DashboardLayout({
     redirect('/auth/login');
   }
 
+  const userName = getAuthUserDisplayName(user.user_metadata, user.email);
+
   return (
-    <ProtectedShell userEmail={user.email ?? ''}>
+    <ProtectedShell userName={userName}>
       {children}
     </ProtectedShell>
   );

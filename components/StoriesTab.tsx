@@ -40,6 +40,25 @@ export function StoriesTab({ projectId, designDocContent, onStoriesGenerated }: 
     }
   };
 
+  const handleRefreshStoryList = async () => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch(`/api/projects/${projectId}/stories-save`);
+      if (response.ok) {
+        const data = await response.json();
+        setStories(data.stories || []);
+      }
+      await fetch(`/api/projects/${projectId}/todos/sync-stories`, { method: 'POST' });
+    } catch (err) {
+      setError('Failed to refresh story list');
+      console.error(err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleGenerateStories = async () => {
     if (!designDocContent) {
       setError('Please generate a design document first');
@@ -68,11 +87,16 @@ export function StoriesTab({ projectId, designDocContent, onStoriesGenerated }: 
       const data = await response.json();
       const newStories = data.stories || [];
 
-      // Save new stories to database
-      await saveStoriesToDatabase([...stories, ...newStories]);
+      const allStories = [...stories, ...newStories];
 
-      setStories([...stories, ...newStories]);
-      onStoriesGenerated?.([...stories, ...newStories]);
+      // Save new stories to database
+      await saveStoriesToDatabase(allStories);
+
+      // Sync story subtasks into the todo list
+      await fetch(`/api/projects/${projectId}/todos/sync-stories`, { method: 'POST' });
+
+      setStories(allStories);
+      onStoriesGenerated?.(allStories);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
       console.error('Story generation error:', err);
@@ -193,7 +217,14 @@ export function StoriesTab({ projectId, designDocContent, onStoriesGenerated }: 
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h3 className="text-xl font-bold text-lucina-primary">User Stories ({stories.length})</h3>
-        <div className="flex gap-3">
+        <div className="flex gap-3 flex-wrap">
+          <button
+            onClick={handleRefreshStoryList}
+            disabled={isLoading}
+            className="px-4 py-2 bg-lucina-surface text-lucina-primary border border-lucina-rose rounded-lg hover:bg-lucina-rose-hover transition-colors disabled:opacity-50"
+          >
+            {isLoading ? 'Refreshing...' : '🔄 Refresh Story List'}
+          </button>
           <button
             onClick={handleAddStory}
             className="px-4 py-2 bg-green-600 text-lucina-primary rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
