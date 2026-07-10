@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/utils/supabase/admin';
+import { getResendConfigError } from '@/lib/resend-config';
 import { ResendService } from '@/infrastructure/external/ResendService';
 
 export async function POST(request: NextRequest) {
@@ -10,7 +11,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Email is required' }, { status: 400 });
     }
 
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? request.nextUrl.origin;
+    const resendConfigError = getResendConfigError();
+    if (resendConfigError) {
+      console.error('Forgot password email config error:', resendConfigError);
+      return NextResponse.json({
+        message: 'If an account exists for that email, a reset link has been sent.',
+      });
+    }
+
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL!.trim();
     const redirectTo = `${siteUrl}/auth/callback?next=/auth/reset-password`;
 
     const supabase = createAdminClient();
@@ -20,11 +29,17 @@ export async function POST(request: NextRequest) {
       options: { redirectTo },
     });
 
-    if (!error && data?.properties?.action_link) {
+    const tokenHash = data?.properties?.hashed_token;
+    const actionLink = data?.properties?.action_link;
+
+    if (!error && (tokenHash || actionLink)) {
       const resend = new ResendService();
-      await resend.sendPasswordResetEmail({
+      await resend.sendAuthEmail({
         to: email.trim(),
-        resetLink: data.properties.action_link,
+        actionType: 'recovery',
+        tokenHash,
+        redirectTo,
+        actionUrl: tokenHash ? undefined : actionLink,
       });
     }
 

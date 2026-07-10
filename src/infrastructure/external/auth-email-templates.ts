@@ -105,17 +105,29 @@ export function buildAuthEmailHtml({
 </html>`;
 }
 
-export function buildSupabaseVerifyUrl(
-  supabaseUrl: string,
+export function resolveAuthNextPath(redirectTo: string, siteUrl: string): string {
+  try {
+    const url = new URL(redirectTo, siteUrl);
+    const next = `${url.pathname}${url.search}`;
+    return next.length > 1 ? next : '/dashboard';
+  } catch {
+    return '/dashboard';
+  }
+}
+
+/** PKCE-compatible link: verify on our callback route, not Supabase /auth/v1/verify. */
+export function buildAuthCallbackUrl(
+  siteUrl: string,
   tokenHash: string,
   actionType: string,
   redirectTo: string
 ) {
+  const base = siteUrl.replace(/\/$/, '');
   const params = new URLSearchParams({
-    token: tokenHash,
+    token_hash: tokenHash,
     type: actionType,
-    redirect_to: redirectTo,
+    next: resolveAuthNextPath(redirectTo, siteUrl),
   });
 
-  return `${supabaseUrl}/auth/v1/verify?${params.toString()}`;
+  return `${base}/auth/callback?${params.toString()}`;
 }

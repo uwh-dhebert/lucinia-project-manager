@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/utils/supabase/admin';
 import { getSignupEmailError, normalizeSignupEmail } from '@/lib/auth-email';
+import { getResendConfigError } from '@/lib/resend-config';
 import { ResendService } from '@/infrastructure/external/ResendService';
 
 export async function POST(request: NextRequest) {
@@ -21,9 +22,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Password must be at least 8 characters.' }, { status: 400 });
     }
 
+    const resendConfigError = getResendConfigError();
+    if (resendConfigError) {
+      return NextResponse.json({ error: resendConfigError }, { status: 503 });
+    }
+
     const normalizedEmail = normalizeSignupEmail(email);
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? request.nextUrl.origin;
-    const redirectTo = `${siteUrl}/auth/callback`;
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL!.trim();
+    const redirectTo = `${siteUrl}/auth/callback?next=/dashboard`;
 
     const supabase = createAdminClient();
     const { data, error } = await supabase.auth.admin.generateLink({
@@ -51,25 +57,34 @@ export async function POST(request: NextRequest) {
 
     const properties = data?.properties;
     const tokenHash = properties?.hashed_token;
+    const actionLink = properties?.action_link;
 
-    if (tokenHash) {
-      try {
-        const resend = new ResendService();
-        await resend.sendAuthEmail({
-          to: normalizedEmail,
-          actionType: 'signup',
-          tokenHash,
-          redirectTo,
-        });
-      } catch (emailError) {
-        console.error('Signup confirmation email error:', emailError);
-        return NextResponse.json(
-          { error: 'Account created, but the confirmation email could not be sent. Contact support.' },
-          { status: 500 }
-        );
-      }
-    } else {
-      console.warn('Signup link generated without hashed_token; confirmation email not sent via Resend.');
+    if (!tokenHash && !actionLink) {
+      return NextResponse.json(
+        { error: 'Account created, but no confirmation link was generated. Contact support.' },
+        { status: 500 }
+      );
+    }
+
+    try {
+      const resend = new ResendService();
+      await resend.sendAuthEmail({
+        to: normalizedEmail,
+        actionType: 'signup',
+        tokenHash,
+        redirectTo,
+        actionUrl: tokenHash ? undefined : actionLink,
+      });
+    } catch (emailError) {
+      const message =
+        emailError instanceof Error ? emailError.message : 'Failed to send confirmation email';
+      console.error('Signup confirmation email error:', emailError);
+      return NextResponse.json(
+        {
+          error: `Account created, but the confirmation email could not be sent. ${message}`,
+        },
+        { status: 500 }
+      );
     }
 
     return NextResponse.json({
