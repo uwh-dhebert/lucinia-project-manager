@@ -2,7 +2,7 @@
 
 ## Problem
 The route `/dashboard` was returning a 404 error because the page didn't exist.
- 
+  
 ## Solution Implemented
 
 ### Created Protected Route Structure
