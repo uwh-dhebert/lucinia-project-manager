@@ -22,6 +22,8 @@ export default function LinksPage() {
   const [showGroupModal, setShowGroupModal] = useState(false);
   const [showLinkModal, setShowLinkModal] = useState(false);
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
+  const [editingGroupId, setEditingGroupId] = useState<string | null>(null);
+  const [editingGroupName, setEditingGroupName] = useState('');
 
   useEffect(() => {
     loadGroups();
@@ -70,6 +72,49 @@ export default function LinksPage() {
       }
     } catch (error) {
       console.error('Failed to delete link:', error);
+    }
+  };
+
+  const startEditingGroup = (groupId: string, name: string) => {
+    setEditingGroupId(groupId);
+    setEditingGroupName(name);
+  };
+
+  const cancelEditingGroup = () => {
+    setEditingGroupId(null);
+    setEditingGroupName('');
+  };
+
+  const handleSaveGroupName = async (groupId: string) => {
+    const name = editingGroupName.trim();
+    if (!name) {
+      cancelEditingGroup();
+      return;
+    }
+
+    const current = groups.find((group) => group.id === groupId);
+    if (!current || current.name === name) {
+      cancelEditingGroup();
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/links/groups/${groupId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update group');
+      }
+
+      const updated = await response.json();
+      setGroups(groups.map((group) => (group.id === groupId ? { ...group, name: updated.name } : group)));
+    } catch (error) {
+      console.error('Failed to update group:', error);
+    } finally {
+      cancelEditingGroup();
     }
   };
 
@@ -125,9 +170,35 @@ export default function LinksPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {groups.map((group) => (
             <div key={group.id} className="border border-lucina-rose rounded-2xl overflow-hidden bg-lucina-white flex flex-col h-full">
-              <div className="p-4 border-b border-lucina-rose flex justify-between items-start">
-                <h2 className="text-lg font-bold text-lucina-primary">{group.name}</h2>
+              <div className="p-4 border-b border-lucina-rose flex justify-between items-start gap-2">
+                {editingGroupId === group.id ? (
+                  <input
+                    type="text"
+                    value={editingGroupName}
+                    onChange={(e) => setEditingGroupName(e.target.value)}
+                    onBlur={() => void handleSaveGroupName(group.id)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') void handleSaveGroupName(group.id);
+                      if (e.key === 'Escape') cancelEditingGroup();
+                    }}
+                    autoFocus
+                    className="flex-1 min-w-0 px-2 py-1 text-lg font-bold text-lucina-primary bg-lucina-white border border-lucina-secondary rounded focus:outline-none focus:ring-2 focus:ring-lucina-secondary"
+                  />
+                ) : (
+                  <h2 className="text-lg font-bold text-lucina-primary flex-1 min-w-0 truncate">
+                    {group.name}
+                  </h2>
+                )}
                 <div className="flex gap-1 flex-shrink-0">
+                  {editingGroupId !== group.id && (
+                    <button
+                      onClick={() => startEditingGroup(group.id, group.name)}
+                      className="p-1.5 text-lucina-secondary hover:text-lucina-primary hover:bg-lucina-surface rounded transition-colors"
+                      title="Edit group"
+                    >
+                      ✏️
+                    </button>
+                  )}
                   <button
                     onClick={() => {
                       setSelectedGroupId(group.id);

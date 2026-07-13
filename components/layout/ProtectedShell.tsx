@@ -1,6 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
+import Link from 'next/link';
 import { useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { createClient } from '@/utils/supabase/client';
@@ -53,14 +54,9 @@ export function ProtectedShell({ children, userName }: ProtectedShellProps) {
               <LucinaLogo href="/dashboard" width={140} height={42} />
 
               <div className="hidden md:flex items-center gap-2">
-                <a
-                  href="/projects"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={navLinkClass}
-                >
+                <Link href="/projects" className={navLinkClass}>
                   Projects
-                </a>
+                </Link>
                 <button
                   type="button"
                   onClick={openLinksModal}
@@ -68,14 +64,9 @@ export function ProtectedShell({ children, userName }: ProtectedShellProps) {
                 >
                   Links
                 </button>
-                <a
-                  href="/wiki"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={navLinkClass}
-                >
+                <Link href="/wiki" className={navLinkClass}>
                   Wiki
-                </a>
+                </Link>
               </div>
             </div>
 
@@ -101,15 +92,13 @@ export function ProtectedShell({ children, userName }: ProtectedShellProps) {
 
           {mobileMenuOpen && (
             <div className="md:hidden mt-4 pt-4 border-t border-lucina-dark space-y-1">
-              <a
+              <Link
                 href="/projects"
-                target="_blank"
-                rel="noopener noreferrer"
                 className="block w-full text-left px-4 py-2 text-sm font-bold text-lucina-cream hover:bg-lucina-dark rounded-lg transition-colors"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Projects
-              </a>
+              </Link>
               <button
                 type="button"
                 onClick={openLinksModal}
@@ -117,15 +106,13 @@ export function ProtectedShell({ children, userName }: ProtectedShellProps) {
               >
                 Links
               </button>
-              <a
+              <Link
                 href="/wiki"
-                target="_blank"
-                rel="noopener noreferrer"
                 className="block w-full text-left px-4 py-2 text-sm font-bold text-lucina-cream hover:bg-lucina-dark rounded-lg transition-colors"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Wiki
-              </a>
+              </Link>
               <div className="text-sm text-lucina-cream/80 px-3 py-2 border-t border-lucina-dark mt-2 pt-3">{userName}</div>
               <button
                 onClick={() => {

@@ -292,7 +292,7 @@ export function StoriesTab({ projectId, designDocContent, onStoriesGenerated }: 
                        setStories(updated);
                        handleUpdateStory(index);
                      }}
-                     className="w-full px-3 py-2 bg-lucina-primary border border-lucina-rose rounded text-lucina-primary text-sm focus:outline-none focus:ring-2 focus:ring-lucina-secondary"
+                     className="w-full px-3 py-2 bg-lucina-white border border-lucina-rose rounded-lg text-lucina-primary text-sm placeholder-lucina-muted focus:outline-none focus:ring-2 focus:ring-lucina-secondary"
                    />
                  </div>
 
@@ -308,7 +308,7 @@ export function StoriesTab({ projectId, designDocContent, onStoriesGenerated }: 
                        setStories(updated);
                        handleUpdateStory(index);
                      }}
-                     className="w-full px-3 py-2 bg-lucina-primary border border-lucina-rose rounded text-lucina-primary text-sm focus:outline-none focus:ring-2 focus:ring-lucina-secondary"
+                     className="w-full px-3 py-2 bg-lucina-white border border-lucina-rose rounded-lg text-lucina-primary text-sm placeholder-lucina-muted focus:outline-none focus:ring-2 focus:ring-lucina-secondary"
                      rows={3}
                    />
                  </div>
@@ -330,7 +330,7 @@ export function StoriesTab({ projectId, designDocContent, onStoriesGenerated }: 
                           handleUpdateStory(index);
                         }}
                         placeholder={`Criterion ${idx + 1}`}
-                        className="w-full px-3 py-2 bg-lucina-primary border border-lucina-rose rounded text-lucina-primary text-sm focus:outline-none focus:ring-2 focus:ring-lucina-secondary"
+                        className="w-full px-3 py-2 bg-lucina-white border border-lucina-rose rounded-lg text-lucina-primary text-sm placeholder-lucina-muted focus:outline-none focus:ring-2 focus:ring-lucina-secondary"
                       />
                     ))}
                      <button
@@ -350,7 +350,7 @@ export function StoriesTab({ projectId, designDocContent, onStoriesGenerated }: 
                 <div className="flex justify-end">
                   <button
                     onClick={() => handleRemoveStory(index)}
-                    className="px-4 py-2 bg-red-600 text-lucina-primary rounded hover:bg-red-700 transition-colors flex items-center gap-2"
+                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2"
                   >
                     <Trash2 size={16} />
                     Remove Story
