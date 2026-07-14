@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/utils/supabase/admin';
 import { getSignupEmailError, normalizeSignupEmail } from '@/lib/auth-email';
 import { getResendConfigError } from '@/lib/resend-config';
+import { getSupabaseConfigError } from '@/lib/supabase-env';
 import { ResendService } from '@/infrastructure/external/ResendService';
 
 export async function POST(request: NextRequest) {
@@ -20,6 +21,12 @@ export async function POST(request: NextRequest) {
 
     if (!password || typeof password !== 'string' || password.length < 8) {
       return NextResponse.json({ error: 'Password must be at least 8 characters.' }, { status: 400 });
+    }
+
+    const supabaseConfigError = getSupabaseConfigError();
+    if (supabaseConfigError) {
+      console.error('Register supabase config error:', supabaseConfigError);
+      return NextResponse.json({ error: supabaseConfigError }, { status: 503 });
     }
 
     const resendConfigError = getResendConfigError();
@@ -45,9 +52,16 @@ export async function POST(request: NextRequest) {
     if (error) {
       const message = error.message.toLowerCase();
 
-      if (message.includes('already') || message.includes('registered')) {
+      if (
+        message.includes('already') ||
+        message.includes('registered') ||
+        message.includes('exists')
+      ) {
         return NextResponse.json(
-          { error: 'An account with this email already exists. Try signing in instead.' },
+          {
+            error:
+              'An account with this email already exists. Try signing in, use Forgot password, or ask an admin to fully remove the user from Supabase Auth before registering again.',
+          },
           { status: 409 }
         );
       }
