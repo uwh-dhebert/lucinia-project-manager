@@ -17,7 +17,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { ChevronDown, ChevronRight, Plus, BookOpen, Folder, FileText, GripVertical } from 'lucide-react'
+import { ChevronDown, ChevronRight, Plus, BookOpen, Folder, FileText, GripVertical, Trash2 } from 'lucide-react'
 
 interface ContentItem {
   id: string
@@ -58,6 +58,7 @@ interface TreeNodeProps {
   expandedNodes: Set<string>
   onToggle: (id: string) => void
   onAdd: (type: NodeType, parentId?: string) => void
+  onDelete: (id: string, type: NodeType, title: string) => void
   level: number
   activeItem?: string
   onSelect?: (id: string, type: NodeType) => void
@@ -72,6 +73,7 @@ function TreeNode({
   expandedNodes,
   onToggle,
   onAdd,
+  onDelete,
   level,
   activeItem,
   onSelect,
@@ -204,6 +206,15 @@ function TreeNode({
             <Plus className="w-3 h-3" />
           </button>
         )}
+
+        {/* Delete Button (appears on hover) */}
+        <button
+          onClick={() => onDelete(item.id, type, getDisplayTitle())}
+          className="p-0.5 opacity-0 group-hover:opacity-100 hover:bg-red-100 rounded transition-all text-lucina-muted hover:text-red-600 flex-shrink-0"
+          title={`Delete ${type}`}
+        >
+          <Trash2 className="w-3 h-3" />
+        </button>
       </div>
 
       {/* Children */}
@@ -222,6 +233,7 @@ function TreeNode({
                   expandedNodes={expandedNodes}
                   onToggle={onToggle}
                   onAdd={onAdd}
+                  onDelete={onDelete}
                   level={level + 1}
                   activeItem={activeItem}
                   onSelect={onSelect}
@@ -242,6 +254,7 @@ function TreeNode({
                   expandedNodes={expandedNodes}
                   onToggle={onToggle}
                   onAdd={onAdd}
+                  onDelete={onDelete}
                   level={level + 1}
                   activeItem={activeItem}
                   onSelect={onSelect}
@@ -318,6 +331,28 @@ export function WikiSidebar({ onItemSelect, activeItemId }: WikiSidebarProps) {
       }
     }
   }, [topics])
+
+  const handleDelete = useCallback(async (id: string, type: NodeType, title: string) => {
+    const warning = {
+      topic: `Delete topic "${title}" and ALL its subjects and content? This cannot be undone.`,
+      subject: `Delete subject "${title}" and all its content? This cannot be undone.`,
+      content: `Delete "${title}"? This cannot be undone.`,
+    }[type]
+    if (!window.confirm(warning)) return
+
+    setReorderError('')
+    try {
+      const response = await fetch(`/api/wiki/${id}`, { method: 'DELETE' })
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}))
+        throw new Error(data.error || `Failed to delete ${type}`)
+      }
+      await loadTopics()
+    } catch (error) {
+      console.error(error)
+      setReorderError(error instanceof Error ? error.message : `Failed to delete ${type}`)
+    }
+  }, [])
 
   const persist = useCallback(
     async (
@@ -588,6 +623,7 @@ export function WikiSidebar({ onItemSelect, activeItemId }: WikiSidebarProps) {
                   expandedNodes={expandedNodes}
                   onToggle={toggleNode}
                   onAdd={handleAdd}
+                  onDelete={handleDelete}
                   level={0}
                   activeItem={activeItemId}
                   onSelect={onItemSelect}

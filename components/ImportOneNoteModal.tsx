@@ -14,7 +14,6 @@ type Phase = 'pick' | 'parsing' | 'preview' | 'importing'
 export function ImportOneNoteModal({ isOpen, onClose, onSuccess }: ImportOneNoteModalProps) {
   const [phase, setPhase] = useState<Phase>('pick')
   const [notebook, setNotebook] = useState<ParsedNotebook | null>(null)
-  const [notebookName, setNotebookName] = useState('')
   const [error, setError] = useState('')
   const dialogRef = useRef<HTMLDialogElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -30,7 +29,6 @@ export function ImportOneNoteModal({ isOpen, onClose, onSuccess }: ImportOneNote
   const reset = () => {
     setPhase('pick')
     setNotebook(null)
-    setNotebookName('')
     setError('')
     if (fileInputRef.current) fileInputRef.current.value = ''
   }
@@ -54,7 +52,6 @@ export function ImportOneNoteModal({ isOpen, onClose, onSuccess }: ImportOneNote
       const { parseOnepkg } = await import('@/lib/onepkg/parse-onepkg')
       const parsed = parseOnepkg(buffer, file.name)
       setNotebook(parsed)
-      setNotebookName(parsed.name)
       setPhase('preview')
     } catch (err: any) {
       setError(err.message || 'Could not parse this .onepkg file.')
@@ -71,8 +68,13 @@ export function ImportOneNoteModal({ isOpen, onClose, onSuccess }: ImportOneNote
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          notebookName: notebookName.trim() || notebook.name,
-          sections: notebook.sections.map((s) => ({ title: s.title, text: s.text })),
+          topics: notebook.topics.map((topic) => ({
+            title: topic.title,
+            subjects: topic.sections.map((section) => ({
+              title: section.name,
+              items: section.pages.map((page) => ({ title: page.title, text: page.text })),
+            })),
+          })),
         }),
       })
 
@@ -89,7 +91,11 @@ export function ImportOneNoteModal({ isOpen, onClose, onSuccess }: ImportOneNote
     }
   }
 
-  const emptyCount = notebook?.sections.filter((s) => s.empty).length ?? 0
+  const emptyCount =
+    notebook?.topics.reduce(
+      (n, t) => n + t.sections.filter((s) => s.empty).length,
+      0
+    ) ?? 0
 
   return (
     <dialog
@@ -101,8 +107,8 @@ export function ImportOneNoteModal({ isOpen, onClose, onSuccess }: ImportOneNote
         <div>
           <h2 className="text-2xl font-bold text-lucina-primary">Import OneNote Notebook</h2>
           <p className="text-lucina-muted text-sm mt-1">
-            Import a .onepkg export — the notebook becomes a topic, sections become subjects with
-            their section-group structure preserved.
+            Section groups become topics, sections become subjects, and every page becomes a
+            content item with its title and text.
           </p>
         </div>
 
@@ -127,9 +133,9 @@ export function ImportOneNoteModal({ isOpen, onClose, onSuccess }: ImportOneNote
             <p className="font-semibold text-lucina-primary">Drop a .onepkg file here or click to browse</p>
             <p className="text-xs text-lucina-muted mt-2">
               In OneNote desktop: File → Export → Notebook → OneNote Package (*.onepkg).
-              Parsing happens in your browser; only extracted text is uploaded. Text is imported
-              best-effort — formatting, images, and ink are not carried over, and
-              password-protected sections cannot be read (remove the password in OneNote first).
+              Parsing happens in your browser; only extracted text is uploaded. Formatting,
+              images, and ink are not carried over, and password-protected sections cannot be
+              read (remove the password in OneNote first).
             </p>
             <input
               ref={fileInputRef}
@@ -153,46 +159,40 @@ export function ImportOneNoteModal({ isOpen, onClose, onSuccess }: ImportOneNote
 
         {(phase === 'preview' || phase === 'importing') && notebook && (
           <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-lucina-primary mb-2">
-                Topic title
-              </label>
-              <input
-                type="text"
-                value={notebookName}
-                onChange={(e) => setNotebookName(e.target.value)}
-                className="w-full px-4 py-2 border border-lucina-rose rounded-xl focus:outline-none focus:ring-2 focus:ring-lucina-secondary focus:border-transparent bg-lucina-surface text-lucina-primary"
-                disabled={phase === 'importing'}
-              />
+            <div className="text-sm font-medium text-lucina-primary">
+              {notebook.topics.length} topic{notebook.topics.length === 1 ? '' : 's'},{' '}
+              {notebook.sectionCount} subject{notebook.sectionCount === 1 ? '' : 's'},{' '}
+              {notebook.pageCount} page{notebook.pageCount === 1 ? '' : 's'}
+              {emptyCount > 0 && (
+                <span className="ml-2 text-amber-700">
+                  ({emptyCount} section{emptyCount === 1 ? '' : 's'} with no readable pages —
+                  possibly password-protected)
+                </span>
+              )}
             </div>
-
-            <div>
-              <div className="text-sm font-medium text-lucina-primary mb-2">
-                {notebook.sections.length} section{notebook.sections.length === 1 ? '' : 's'} found
-                {emptyCount > 0 && (
-                  <span className="ml-2 text-amber-700">
-                    ({emptyCount} with no readable text — possibly password-protected)
-                  </span>
-                )}
-              </div>
-              <ul className="max-h-64 overflow-y-auto border border-lucina-rose rounded-xl divide-y divide-lucina-rose/50 bg-lucina-surface/30">
-                {notebook.sections.map((section, idx) => (
-                  <li key={idx} className="px-4 py-2 text-sm flex justify-between gap-3">
-                    <span className="text-lucina-primary truncate">
-                      {section.groupPath.length > 0 && (
-                        <span className="text-lucina-muted">{section.groupPath.join(' / ')} / </span>
-                      )}
-                      <span className="font-semibold">{section.name}</span>
-                    </span>
-                    <span className={`whitespace-nowrap text-xs ${section.empty ? 'text-amber-700 font-semibold' : 'text-lucina-muted'}`}>
-                      {section.empty
-                        ? 'no text'
-                        : `${section.text.length.toLocaleString()} chars`}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
+            <ul className="max-h-72 overflow-y-auto border border-lucina-rose rounded-xl divide-y divide-lucina-rose/50 bg-lucina-surface/30">
+              {notebook.topics.map((topic, tIdx) => (
+                <li key={tIdx} className="px-4 py-2">
+                  <div className="text-sm font-bold text-lucina-primary">📖 {topic.title}</div>
+                  <ul className="mt-1 space-y-0.5">
+                    {topic.sections.map((section, sIdx) => (
+                      <li key={sIdx} className="pl-5 text-sm flex justify-between gap-3">
+                        <span className="text-lucina-primary truncate">📁 {section.name}</span>
+                        <span
+                          className={`whitespace-nowrap text-xs ${
+                            section.empty ? 'text-amber-700 font-semibold' : 'text-lucina-muted'
+                          }`}
+                        >
+                          {section.empty
+                            ? 'no pages'
+                            : `${section.pages.length} page${section.pages.length === 1 ? '' : 's'}${section.flat ? ' (unstructured)' : ''}`}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </li>
+              ))}
+            </ul>
           </div>
         )}
 
