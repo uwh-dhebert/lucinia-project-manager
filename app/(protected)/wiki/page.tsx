@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { CreateTopicModal } from '@/components/CreateTopicModal'
+import { ImportOneNoteModal } from '@/components/ImportOneNoteModal'
 
 interface ContentItem {
   id: string
@@ -37,6 +38,7 @@ export default function WikiPage() {
   const [topics, setTopics] = useState<Topic[]>([])
   const [loading, setLoading] = useState(true)
   const [modalOpen, setModalOpen] = useState(false)
+  const [importOpen, setImportOpen] = useState(false)
   const [setupNeeded, setSetupNeeded] = useState(false)
   const [setupInstructions, setSetupInstructions] = useState<string[]>([])
 
@@ -79,12 +81,20 @@ export default function WikiPage() {
           <p className="text-lucina-muted mt-2">Topics → Subjects → Content Items</p>
         </div>
         {!setupNeeded && (
-          <button
-            onClick={() => setModalOpen(true)}
-            className="px-6 py-2.5 bg-lucina-rose text-lucina-primary font-medium rounded-full hover:bg-lucina-rose-hover transition-colors shadow-lg hover:shadow-xl"
-          >
-            + New Topic
-          </button>
+          <div className="flex gap-3">
+            <button
+              onClick={() => setImportOpen(true)}
+              className="px-6 py-2.5 border border-lucina-rose text-lucina-secondary font-medium rounded-full hover:bg-lucina-surface transition-colors"
+            >
+              Import OneNote
+            </button>
+            <button
+              onClick={() => setModalOpen(true)}
+              className="px-6 py-2.5 bg-lucina-rose text-lucina-primary font-medium rounded-full hover:bg-lucina-rose-hover transition-colors shadow-lg hover:shadow-xl"
+            >
+              + New Topic
+            </button>
+          </div>
         )}
       </div>
 
@@ -191,6 +201,18 @@ export default function WikiPage() {
           onClose={() => setModalOpen(false)}
           onSuccess={() => {
             setModalOpen(false)
+            loadTopics()
+          }}
+        />
+      )}
+
+      {/* Import OneNote Modal */}
+      {!setupNeeded && (
+        <ImportOneNoteModal
+          isOpen={importOpen}
+          onClose={() => setImportOpen(false)}
+          onSuccess={() => {
+            setImportOpen(false)
             loadTopics()
           }}
         />
