@@ -29,7 +29,21 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    return NextResponse.json(topics || [])
+    // PostgREST does not order embedded resources — sort the nested tree here
+    // so drag-and-drop ordering is respected everywhere.
+    const byOrder = (a: { order?: number }, b: { order?: number }) =>
+      (a.order ?? 0) - (b.order ?? 0)
+    const sorted = (topics ?? []).map((topic: any) => ({
+      ...topic,
+      subjects: (topic.subjects ?? [])
+        .map((subject: any) => ({
+          ...subject,
+          contentItems: [...(subject.contentItems ?? [])].sort(byOrder),
+        }))
+        .sort(byOrder),
+    }))
+
+    return NextResponse.json(sorted)
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
