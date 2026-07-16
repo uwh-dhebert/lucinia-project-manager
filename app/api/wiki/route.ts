@@ -22,6 +22,7 @@ export async function GET(request: NextRequest) {
     const { data: topics, error } = await supabase
       .from('topics')
       .select(selectQuery)
+      .eq('userId', user.id)
       .order('order', { ascending: true })
 
     if (error) {
@@ -62,10 +63,11 @@ export async function POST(request: NextRequest) {
       .replace(/\s+/g, '-')
       .replace(/-+/g, '-')
 
-    // Get the next order value
+    // Get the next order value within this user's own wiki
     const { data: lastTopic } = await supabase
       .from('topics')
       .select('order')
+      .eq('userId', user.id)
       .order('order', { ascending: false })
       .limit(1)
 
@@ -79,6 +81,7 @@ export async function POST(request: NextRequest) {
       .from('topics')
       .insert({
         id: topicId,
+        userId: user.id,
         title,
         slug,
         order,

@@ -1,58 +1,49 @@
-# Wiki Setup - NO RLS Version
+# Wiki Setup — superseded
 
-You got an RLS error because Row Level Security was enabled on the subjects table.
+> **Do not disable RLS on the wiki tables.**
+>
+> This guide used to tell you to run `ALTER TABLE subjects DISABLE ROW LEVEL SECURITY`.
+> That is what made the wiki **global**: every logged-in user could read, edit and
+> delete every other user's topics, subjects and content.
+>
+> The correct setup is **`WIKI_PER_USER.sql`**.
 
-## Solution: Use WIKI_RESTRUCTURE_NO_RLS.sql
+## What actually went wrong
 
-### If Starting Fresh:
+`DATABASE_SETUP.sql` ran `ENABLE ROW LEVEL SECURITY` on `topics`, `subjects` and
+`content_items` but never created a single **policy** for them.
 
-1. **File**: `WIKI_RESTRUCTURE_NO_RLS.sql` (in project root)
-2. **Go to**: https://supabase.com/dashboard
-3. **SQL Editor** → New Query
-4. **Copy** entire file content
-5. **Paste** into SQL editor
-6. **Click Run**
-7. **Refresh** your browser
+RLS with no policies denies everything. So the wiki looked broken, and the fix
+applied at the time was to switch RLS off — which turned "nobody can read it" into
+"everybody can read everyone's". The real fix is to enable RLS *and write the policies*.
 
----
+## Setup
 
-## If You Already Have Tables with RLS Enabled:
+1. Go to https://supabase.com/dashboard → **SQL Editor** → **New Query**
+2. Run `WIKI_RESTRUCTURE_NO_RLS.sql` **only if the wiki tables do not exist yet**
+   (it creates `topics` / `subjects` / `content_items`; ignore its `DISABLE ROW LEVEL SECURITY`
+   lines — the next step reverses them)
+3. Run **`WIKI_PER_USER.sql`**. This is the one that matters. It:
+   - adds `topics."userId"` and backfills existing rows to a single owner
+   - makes topic slugs unique **per user** instead of globally
+   - enables RLS on all three wiki tables **with owner-only policies**
+   - revokes wiki access from the `anon` role
+4. Refresh your browser.
 
-Run this in Supabase SQL Editor:
+`WIKI_PER_USER.sql` is safe to re-run.
 
-```sql
--- Disable RLS on existing tables
-ALTER TABLE subjects DISABLE ROW LEVEL SECURITY;
-ALTER TABLE content_items DISABLE ROW LEVEL SECURITY;
-```
+## Verifying
 
-Then refresh your browser and try again.
+The bottom of `WIKI_PER_USER.sql` prints a check. Every wiki table must report
+`rls_enabled = true` with `policy_count = 4`. If any row shows `false` or `0`,
+the wiki is still shared and the migration did not finish.
 
----
+## Ownership model
 
-## What's Included:
+The wiki is **strictly private and cannot be shared** — there is no membership
+table, no share link, no public flag, and no `is_public` column.
 
-✅ Creates `subjects` table  
-✅ Creates `content_items` table  
-✅ Creates indexes for performance  
-✅ **NO ROW LEVEL SECURITY** (RLS disabled)  
-✅ Auto-update timestamps  
-✅ Cascade delete relationships  
-
----
-
-## After Setup:
-
-1. Go to `/wiki`
-2. Click "+ New Subject"
-3. Create your first subject ✅
-4. Add content items to subjects
-5. Wiki is ready to use!
-
----
-
-**Status**: Ready for setup  
-**File**: WIKI_RESTRUCTURE_NO_RLS.sql  
-**RLS**: Disabled  
-**Time**: 5 minutes
-
+Ownership lives on `topics` only. `subjects` and `content_items` inherit it through
+`topicId` / `subjectId`, the same way `links` inherit from `link_groups`
+(see `UPDATE_LINKS_STRUCTURE.sql`). If you ever add a wiki table, it must inherit
+ownership the same way and get its own policies.

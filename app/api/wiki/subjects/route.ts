@@ -1,4 +1,5 @@
 import { createClient } from '@/utils/supabase/server'
+import { ownsTopic } from '@/lib/wiki-access'
 import { NextRequest, NextResponse } from 'next/server'
 import { randomUUID } from 'crypto'
 
@@ -20,6 +21,11 @@ export async function POST(request: NextRequest) {
         { error: 'Topic ID and title are required' },
         { status: 400 }
       )
+    }
+
+    // Never let a subject be hung off someone else's topic
+    if (!(await ownsTopic(supabase, user.id, topicId))) {
+      return NextResponse.json({ error: 'Topic not found' }, { status: 404 })
     }
 
     // Generate slug from title

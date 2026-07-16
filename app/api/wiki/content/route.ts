@@ -1,4 +1,5 @@
 import { createClient } from '@/utils/supabase/server'
+import { ownsSubject } from '@/lib/wiki-access'
 import { NextRequest, NextResponse } from 'next/server'
 import { randomUUID } from 'crypto'
 
@@ -20,6 +21,11 @@ export async function POST(request: NextRequest) {
         { error: 'Subject ID and content are required' },
         { status: 400 }
       )
+    }
+
+    // Never let content be written into someone else's subject
+    if (!(await ownsSubject(supabase, user.id, subjectId))) {
+      return NextResponse.json({ error: 'Subject not found' }, { status: 404 })
     }
 
     // Get the next order value for this subject

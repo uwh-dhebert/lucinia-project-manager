@@ -114,16 +114,21 @@ model ProjectNote {
 }
 
 // Documentation - Topics (Wiki - Top Level)
+// The wiki is strictly per-user and never shared. Ownership lives here; Subject
+// and ContentItem inherit it through topicId / subjectId.
 model Topic {
   id          String   @id @default(uuid()) @db.Uuid
+  userId      String   @db.Uuid
   title       String
-  slug        String   @unique
+  slug        String
   order       Int      @default(0)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   subjects    Subject[]
 
+  @@unique([userId, slug])
+  @@index([userId])
   @@map("topics")
 }
 

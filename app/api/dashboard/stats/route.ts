@@ -14,7 +14,7 @@ export async function GET() {
     const projects = await getAccessibleProjects(supabase, user.id);
 
     const [docsRes, groupsRes] = await Promise.all([
-      supabase.from('topics').select('id', { count: 'exact', head: true }),
+      supabase.from('topics').select('id', { count: 'exact', head: true }).eq('userId', user.id),
       supabase.from('link_groups').select('id').eq('userId', user.id),
     ]);
 

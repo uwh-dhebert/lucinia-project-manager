@@ -30,6 +30,7 @@ export async function POST() {
             'Go to: https://supabase.com/dashboard',
             'Open SQL Editor → New Query',
             'Copy all content from WIKI_RESTRUCTURE_NO_RLS.sql (in project root)',
+            'Then run WIKI_PER_USER.sql to add per-user ownership and RLS',
             'Paste into SQL editor and click Run',
             'Refresh your browser after SQL completes'
           ]
@@ -56,7 +57,7 @@ export async function POST() {
         success: false,
         initialized: false,
         error: error.message,
-        hint: 'Please run WIKI_RESTRUCTURE.sql in Supabase Dashboard manually'
+        hint: 'Please run WIKI_RESTRUCTURE_NO_RLS.sql then WIKI_PER_USER.sql in Supabase Dashboard manually'
       },
       { status: 200 }
     )

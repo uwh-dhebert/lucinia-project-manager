@@ -1,4 +1,5 @@
 import { createClient } from '@/utils/supabase/server'
+import { ownsContentItem } from '@/lib/wiki-access'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function PATCH(
@@ -18,6 +19,10 @@ export async function PATCH(
 
     if (!id) {
       return NextResponse.json({ error: 'ID is required' }, { status: 400 })
+    }
+
+    if (!(await ownsContentItem(supabase, user.id, id))) {
+      return NextResponse.json({ error: 'Content item not found' }, { status: 404 })
     }
 
     const body = await request.json()
@@ -62,6 +67,10 @@ export async function DELETE(
 
     if (!id) {
       return NextResponse.json({ error: 'ID is required' }, { status: 400 })
+    }
+
+    if (!(await ownsContentItem(supabase, user.id, id))) {
+      return NextResponse.json({ error: 'Content item not found' }, { status: 404 })
     }
 
     const { error } = await supabase

@@ -93,6 +93,7 @@ export class ChatUseCase {
       const { data: topics } = await supabase
         .from('topics')
         .select('id, title, slug, subjects(id, title, slug, content_items(id, title, content))')
+        .eq('userId', userId)
         .order('order', { ascending: true })
         .limit(100);
 

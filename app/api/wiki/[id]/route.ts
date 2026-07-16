@@ -1,4 +1,5 @@
 import { createClient } from '@/utils/supabase/server'
+import { resolveOwnedWikiNode } from '@/lib/wiki-access'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function DELETE(
@@ -20,42 +21,32 @@ export async function DELETE(
       return NextResponse.json({ error: 'ID is required' }, { status: 400 })
     }
 
-    // Try to delete as topic first
-    const { error: topicError } = await supabase
-      .from('topics')
+    // The UI posts both topic ids and subject ids here, so work out which this is.
+    // Ids the user does not own resolve to null and are reported as 404, so a
+    // probe cannot distinguish another user's content from a nonexistent id.
+    const nodeType = await resolveOwnedWikiNode(supabase, user.id, id)
+
+    if (!nodeType) {
+      return NextResponse.json({ error: 'Item not found' }, { status: 404 })
+    }
+
+    const table = {
+      topic: 'topics',
+      subject: 'subjects',
+      contentItem: 'content_items',
+    }[nodeType]
+
+    const { error } = await supabase
+      .from(table)
       .delete()
       .eq('id', id)
 
-    if (!topicError) {
-      return NextResponse.json({ success: true })
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    // If not a topic, try as subject
-    const { error: subjectError } = await supabase
-      .from('subjects')
-      .delete()
-      .eq('id', id)
-
-    if (!subjectError) {
-      return NextResponse.json({ success: true })
-    }
-
-    // If not a subject, try as content item
-    const { error: contentError } = await supabase
-      .from('content_items')
-      .delete()
-      .eq('id', id)
-
-    if (!contentError) {
-      return NextResponse.json({ success: true })
-    }
-
-    return NextResponse.json(
-      { error: 'Item not found' },
-      { status: 404 }
-    )
+    return NextResponse.json({ success: true })
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }
-
