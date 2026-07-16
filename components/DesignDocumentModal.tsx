@@ -161,18 +161,21 @@ export function DesignDocumentModal({
                 Generate Project Design Document
               </h4>
               <p className="text-lucina-muted mb-6">
-                Use xAI Grok&apos;s reasoning model to automatically generate a comprehensive
-                Project Design Document for <strong>{projectName}</strong>
+                Uses your <strong>project notes</strong> (plus name and description) as the
+                source material for Grok to write the design document for{' '}
+                <strong>{projectName}</strong>.
               </p>
               <div className="space-y-3 text-sm text-lucina-muted">
-                <p>📋 Includes all key sections:</p>
+                <p>📋 What gets included:</p>
                 <ul className="list-none space-y-1">
-                  <li>✓ Problem Statement &amp; Objectives</li>
-                  <li>✓ In/Out of Scope &amp; Guiding Principles</li>
-                  <li>✓ Architecture &amp; Phased Approach</li>
-                  <li>✓ Success Criteria &amp; Risks</li>
-                  <li>✓ Governance &amp; Timeline</li>
+                  <li>✓ All project notes (mappings, SQL, requirements)</li>
+                  <li>✓ Project name &amp; description</li>
+                  <li>✓ Prior design doc (if regenerating)</li>
+                  <li>✓ Standard sections + data mapping tables from notes</li>
                 </ul>
+                <p className="text-xs mt-3">
+                  Tip: put detailed requirements and field mappings in Notes before generating.
+                </p>
               </div>
             </div>
           )}
@@ -180,7 +183,9 @@ export function DesignDocumentModal({
           {isLoading && (
             <div className="text-center py-12">
               <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-lucina-secondary mb-4"></div>
-              <p className="text-lucina-muted">Generating document with Grok reasoning model...</p>
+              <p className="text-lucina-muted">
+                Generating from project notes with Grok reasoning model...
+              </p>
             </div>
           )}
 
