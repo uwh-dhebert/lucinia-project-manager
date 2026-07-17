@@ -22,8 +22,7 @@ export async function GET(request: NextRequest) {
         return NextResponse.json(
           {
             error: 'Database not initialized',
-            message: 'Please initialize your database first',
-            redirect: '/setup',
+            message: 'Database is not set up. Run DATABASE_SETUP.sql in Supabase.',
           },
           { status: 503 }
         );
@@ -113,8 +112,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json(
           {
             error: 'Database not initialized',
-            message: 'Please initialize your database first',
-            redirect: '/setup',
+            message: 'Database is not set up. Run DATABASE_SETUP.sql in Supabase.',
           },
           { status: 503 }
         );

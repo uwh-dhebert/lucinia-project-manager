@@ -12,7 +12,6 @@ const protectedPrefixes = [
   '/ai-tools',
   '/ai-generator',
   '/admin',
-  '/init-db',
 ];
 
 const authPaths = ['/auth/login', '/auth/register', '/auth/forgot-password'];
@@ -50,7 +49,6 @@ export const config = {
     '/ai-tools/:path*',
     '/ai-generator/:path*',
     '/admin/:path*',
-    '/init-db/:path*',
     '/auth/login',
     '/auth/register',
     '/auth/forgot-password',
