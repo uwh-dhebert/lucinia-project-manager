@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS project_members (
 CREATE INDEX IF NOT EXISTS project_members_projectId_idx ON project_members("projectId");
 CREATE INDEX IF NOT EXISTS project_members_userId_idx ON project_members("userId");
 
-GRANT ALL ON project_members TO anon, authenticated, service_role;
+GRANT ALL ON project_members TO authenticated, service_role;
 
 NOTIFY pgrst, 'reload schema';
 

@@ -19,7 +19,7 @@ CREATE INDEX IF NOT EXISTS idx_project_todos_project_id ON project_todos(project
 CREATE INDEX IF NOT EXISTS idx_project_todos_parent_id ON project_todos(parent_id);
 CREATE INDEX IF NOT EXISTS idx_project_todos_story_id ON project_todos(story_id);
 
-GRANT ALL ON project_todos TO anon, authenticated, service_role;
+GRANT ALL ON project_todos TO authenticated, service_role;
 
 NOTIFY pgrst, 'reload schema';
 `;

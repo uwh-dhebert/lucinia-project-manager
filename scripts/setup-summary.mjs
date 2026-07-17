@@ -43,7 +43,7 @@ CREATE TABLE IF NOT EXISTS project_summaries (
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_project_summaries_project_id ON project_summaries(project_id);
 
-GRANT ALL ON project_summaries TO anon, authenticated, service_role;
+GRANT ALL ON project_summaries TO authenticated, service_role;
 
 NOTIFY pgrst, 'reload schema';
 `;

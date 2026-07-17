@@ -35,7 +35,7 @@ if (!databaseUrl) {
 const sqlPath = path.join(__dirname, '..', 'PROJECT_SHARING.sql');
 let migrationSql = fs.readFileSync(sqlPath, 'utf-8');
 if (!migrationSql.includes('NOTIFY pgrst')) {
-  migrationSql += '\nGRANT ALL ON project_members TO anon, authenticated, service_role;\nNOTIFY pgrst, \'reload schema\';\n';
+  migrationSql += '\nGRANT ALL ON project_members TO authenticated, service_role;\nNOTIFY pgrst, \'reload schema\';\n';
 }
 
 const db = postgres(databaseUrl, { ssl: 'require', max: 1 });
