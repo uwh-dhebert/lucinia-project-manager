@@ -168,6 +168,7 @@ export async function PUT(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const { id: projectId } = await params;
     const body = await request.json();
     const { storyId, title, description, acceptanceCriteria } = body;
 
@@ -178,7 +179,16 @@ export async function PUT(
       );
     }
 
-    // Update story
+    const allowed = await canAccessProject(supabase, user.id, projectId);
+    if (!allowed) {
+      return NextResponse.json(
+        { error: 'Project not found or unauthorized' },
+        { status: 404 }
+      );
+    }
+
+    // Update story, scoped to this project so a body-supplied storyId cannot
+    // reach another project's stories.
     const { data: updatedStory, error } = await supabase
       .from('project_stories')
       .update({
@@ -188,6 +198,7 @@ export async function PUT(
         updated_at: new Date().toISOString(),
       })
       .eq('id', storyId)
+      .eq('project_id', projectId)
       .select()
       .single();
 
@@ -218,6 +229,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const { id: projectId } = await params;
     const body = await request.json();
     const { storyId } = body;
 
@@ -228,11 +240,21 @@ export async function DELETE(
       );
     }
 
-    // Delete story
+    const allowed = await canAccessProject(supabase, user.id, projectId);
+    if (!allowed) {
+      return NextResponse.json(
+        { error: 'Project not found or unauthorized' },
+        { status: 404 }
+      );
+    }
+
+    // Delete story, scoped to this project so a body-supplied storyId cannot
+    // reach another project's stories.
     const { error } = await supabase
       .from('project_stories')
       .delete()
-      .eq('id', storyId);
+      .eq('id', storyId)
+      .eq('project_id', projectId);
 
     if (error) throw error;
 

@@ -137,6 +137,7 @@ export async function PUT(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const { id: projectId } = await params;
     const body = await request.json();
     const { noteId, content } = body;
 
@@ -147,7 +148,16 @@ export async function PUT(
       );
     }
 
-    // Update note
+    const allowed = await canAccessProject(supabase, user.id, projectId);
+    if (!allowed) {
+      return NextResponse.json(
+        { error: 'Project not found or unauthorized' },
+        { status: 404 }
+      );
+    }
+
+    // Update note, scoped to this project so a body-supplied noteId cannot reach
+    // another project's notes.
     const { data: updatedNote, error } = await supabase
       .from('project_notes')
       .update({
@@ -155,6 +165,7 @@ export async function PUT(
         updated_at: new Date().toISOString(),
       })
       .eq('id', noteId)
+      .eq('project_id', projectId)
       .select()
       .single();
 
@@ -185,6 +196,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const { id: projectId } = await params;
     const body = await request.json();
     const { noteId } = body;
 
@@ -195,11 +207,21 @@ export async function DELETE(
       );
     }
 
-    // Delete note
+    const allowed = await canAccessProject(supabase, user.id, projectId);
+    if (!allowed) {
+      return NextResponse.json(
+        { error: 'Project not found or unauthorized' },
+        { status: 404 }
+      );
+    }
+
+    // Delete note, scoped to this project so a body-supplied noteId cannot reach
+    // another project's notes.
     const { error } = await supabase
       .from('project_notes')
       .delete()
-      .eq('id', noteId);
+      .eq('id', noteId)
+      .eq('project_id', projectId);
 
     if (error) throw error;
 
