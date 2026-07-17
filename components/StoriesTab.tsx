@@ -184,7 +184,8 @@ export function StoriesTab({ projectId, designDocContent, onStoriesGenerated }: 
         <div className="text-4xl mb-4">📖</div>
         <h3 className="text-lg font-semibold text-lucina-primary mb-2">Generate User Stories</h3>
         <p className="text-lucina-muted text-center mb-6">
-          Use Grok's reasoning model to automatically generate user stories from your design document
+          Use Grok as architect, engineer, and product owner to generate a minimal set of
+          delivery-sized stories (~2–3 days each) from your design document
         </p>
         {error && (
           <div className="bg-red-50 border border-red-800 rounded-lg p-3 mb-6 w-full">

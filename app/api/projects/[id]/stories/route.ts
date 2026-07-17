@@ -7,7 +7,11 @@ import { createClient } from '@/utils/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
 import { randomUUID } from 'crypto';
 import { canAccessProject } from '@/lib/project-access';
-import { mapStoryRow } from '@/lib/project-stories';
+import {
+  buildStoriesPrompt,
+  mapStoryRow,
+  STORIES_SYSTEM_PROMPT,
+} from '@/lib/project-stories';
 import { getErrorMessage } from '@/lib/errors';
 import {
   ensureStorySourceColumn,
@@ -132,16 +136,15 @@ export async function POST(
         messages: [
           {
             role: 'system',
-            content:
-              'You are an expert software engineer and product manager. Generate well-formed user stories with clear acceptance criteria based on the design document provided. Return the stories as a JSON array with the specified format.',
+            content: STORIES_SYSTEM_PROMPT,
           },
           {
             role: 'user',
             content: prompt,
           },
         ],
-        temperature: 0.7,
-        max_tokens: 4096,
+        temperature: 0.5,
+        max_tokens: 8192,
       }),
     });
 
@@ -220,28 +223,4 @@ export async function POST(
   }
 }
 
-function buildStoriesPrompt(designDoc: string, projectName: string): string {
-  return `Based on the following project design document for "${projectName}", generate 5-10 user stories.
 
-Design Document:
-${designDoc}
-
-Generate stories in the following JSON format (return ONLY valid JSON array, no other text):
-[
-  {
-    "title": "User Story Title",
-    "description": "As a [user type], I want to [action], so that [benefit]",
-    "acceptanceCriteria": [
-      "Given [context], when [action], then [expected result]",
-      "Additional criteria..."
-    ]
-  }
-]
-
-Requirements for stories:
-- Each story should be specific and actionable
-- Acceptance criteria should be testable and clear
-- Stories should cover key features from the design document
-- Include both user-facing and technical stories
-- Prioritize stories based on the phased approach mentioned in the design doc`;
-}
