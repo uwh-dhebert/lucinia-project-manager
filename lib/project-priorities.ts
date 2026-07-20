@@ -1,4 +1,4 @@
-export type PriorityZone = 'active' | 'prioritized' | 'in_design' | 'completed';
+export type PriorityZone = 'in_design' | 'prioritized' | 'active' | 'qa' | 'completed';
 
 export interface ProjectPriorityItem {
   id: string;
@@ -15,26 +15,29 @@ export interface ProjectPriorityItem {
   updatedAt: string;
 }
 
-export const PRIORITY_ZONES: PriorityZone[] = ['active', 'prioritized', 'in_design', 'completed'];
+export const PRIORITY_ZONES: PriorityZone[] = ['in_design', 'prioritized', 'active', 'qa', 'completed'];
 
 export const ZONE_LABELS: Record<PriorityZone, string> = {
+  in_design: 'Design',
+  prioritized: 'Prioritize',
   active: 'Active',
-  prioritized: 'Prioritized',
-  in_design: 'In Design',
-  completed: 'Completed',
+  qa: 'QA',
+  completed: 'Complete',
 };
 
 export const ZONE_COLORS: Record<PriorityZone, string> = {
-  active: 'border-emerald-500/50 bg-emerald-50',
-  prioritized: 'border-amber-500/50 bg-amber-50',
   in_design: 'border-lucina-secondary/50 bg-lucina-surface',
+  prioritized: 'border-amber-500/50 bg-amber-50',
+  active: 'border-emerald-500/50 bg-emerald-50',
+  qa: 'border-sky-500/50 bg-sky-50',
   completed: 'border-lucina-muted/50 bg-lucina-accent',
 };
 
 export const ZONE_BADGE_COLORS: Record<PriorityZone, string> = {
-  active: 'bg-emerald-50 text-emerald-700 border-emerald-300/50',
-  prioritized: 'bg-amber-50 text-amber-700 border-amber-300/50',
   in_design: 'bg-lucina-surface text-lucina-secondary border-lucina-rose/50',
+  prioritized: 'bg-amber-50 text-amber-700 border-amber-300/50',
+  active: 'bg-emerald-50 text-emerald-700 border-emerald-300/50',
+  qa: 'bg-sky-50 text-sky-700 border-sky-300/50',
   completed: 'bg-lucina-accent text-lucina-muted border-lucina-muted/50',
 };
 
@@ -80,9 +83,10 @@ export function mapProjectToPriorityItem(project: ProjectRow): ProjectPriorityIt
 
 export function groupByZone(items: ProjectPriorityItem[]): Record<PriorityZone, ProjectPriorityItem[]> {
   const grouped: Record<PriorityZone, ProjectPriorityItem[]> = {
-    active: [],
-    prioritized: [],
     in_design: [],
+    prioritized: [],
+    active: [],
+    qa: [],
     completed: [],
   };
 
@@ -106,6 +110,22 @@ export function flattenZones(grouped: Record<PriorityZone, ProjectPriorityItem[]
   return PRIORITY_ZONES.flatMap((zone) =>
     grouped[zone].map((item, index) => ({ ...item, zone, sortOrder: index }))
   );
+}
+
+export const COMPLETED_WINDOW_DAYS = 7;
+
+/**
+ * A completed project counts as "recent" when it was last touched within the
+ * window. `updatedAt` is the best available proxy for when it moved to Complete.
+ */
+export function isRecentlyCompleted(
+  item: ProjectPriorityItem,
+  now: number = Date.now(),
+  windowDays: number = COMPLETED_WINDOW_DAYS
+): boolean {
+  const updated = new Date(item.updatedAt).getTime();
+  if (Number.isNaN(updated)) return true;
+  return now - updated <= windowDays * 24 * 60 * 60 * 1000;
 }
 
 export function sortProjectsForPriorities(projects: ProjectRow[]): ProjectPriorityItem[] {

@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { sortProjectsForPriorities, type PriorityZone } from '@/lib/project-priorities';
 import { canAccessProject, getAccessibleProjects } from '@/lib/project-access';
 
-const VALID_ZONES: PriorityZone[] = ['active', 'prioritized', 'in_design', 'completed'];
+const VALID_ZONES: PriorityZone[] = ['in_design', 'prioritized', 'active', 'qa', 'completed'];
 
 interface ReorderItem {
   id: string;

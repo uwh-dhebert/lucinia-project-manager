@@ -17,7 +17,7 @@ import {
 import {
   SortableContext,
   arrayMove,
-  rectSortingStrategy,
+  verticalListSortingStrategy,
   useSortable,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -26,32 +26,19 @@ import { ShareProjectModal } from '@/components/ShareProjectModal';
 import { UserSelect } from '@/components/UserSelect';
 import { getUserDisplayName, type AppUser } from '@/lib/users';
 import {
+  COMPLETED_WINDOW_DAYS,
   PRIORITY_ZONES,
   ZONE_BADGE_COLORS,
   ZONE_COLORS,
   ZONE_LABELS,
   flattenZones,
   groupByZone,
+  isRecentlyCompleted,
   sortProjectsForPriorities,
   type PriorityZone,
   type ProjectPriorityItem,
   type ProjectRow,
 } from '@/lib/project-priorities';
-
-function ZoneDivider({ label, color }: { label: string; color: string }) {
-  return (
-    <div className="relative py-6">
-      <div className="absolute inset-0 flex items-center">
-        <div className={`w-full border-t-2 ${color}`} />
-      </div>
-      <div className="relative flex justify-center">
-        <span className="bg-lucina-primary px-4 text-xs font-semibold uppercase tracking-wider text-lucina-muted">
-          {label}
-        </span>
-      </div>
-    </div>
-  );
-}
 
 function resolveResponsibleUserId(responsible: string, users: AppUser[]): string {
   if (!responsible) return '';
@@ -91,11 +78,11 @@ function ProjectCard({ item, users, onResponsibleChange, onStatusChange, onShare
     <div
       ref={setNodeRef}
       style={style}
-      className={`group flex h-full flex-col rounded-xl border border-lucina-rose bg-lucina-white p-4 shadow-sm transition-shadow hover:border-lucina-secondary hover:shadow-md ${
+      className={`group flex flex-col rounded-xl border border-lucina-rose bg-lucina-white p-3 shadow-sm transition-shadow hover:border-lucina-secondary hover:shadow-md ${
         isDragging ? 'shadow-xl ring-2 ring-lucina-secondary/50' : ''
       }`}
     >
-      <div className="mb-3 flex items-start justify-between gap-2">
+      <div className="mb-2 flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
           <Link
             href={`/projects/${item.slug}`}
@@ -123,7 +110,7 @@ function ProjectCard({ item, users, onResponsibleChange, onStatusChange, onShare
       </div>
 
       {item.description && (
-        <p className="text-lucina-muted text-sm line-clamp-2 mb-3">{item.description}</p>
+        <p className="text-lucina-muted text-sm line-clamp-2 mb-2">{item.description}</p>
       )}
 
       <div className="mt-auto space-y-2">
@@ -168,16 +155,15 @@ function ProjectCard({ item, users, onResponsibleChange, onStatusChange, onShare
   );
 }
 
-function ZoneSection({
+function KanbanColumn({
   zone,
   items,
   users,
   onResponsibleChange,
   onStatusChange,
   onShare,
-  showTopDivider,
-  dividerLabel,
-  dividerColor,
+  headerExtra,
+  footer,
 }: {
   zone: PriorityZone;
   items: ProjectPriorityItem[];
@@ -185,26 +171,16 @@ function ZoneSection({
   onResponsibleChange: (id: string, responsible: string) => void;
   onStatusChange: (id: string, zone: PriorityZone) => void;
   onShare?: (id: string, name: string) => void;
-  showTopDivider?: boolean;
-  dividerLabel?: string;
-  dividerColor?: string;
+  headerExtra?: React.ReactNode;
+  footer?: React.ReactNode;
 }) {
   const ids = items.map((item) => item.id);
   const { setNodeRef, isOver } = useDroppable({ id: zone });
 
   return (
-    <div data-zone={zone}>
-      {showTopDivider && dividerLabel && dividerColor && (
-        <ZoneDivider label={dividerLabel} color={dividerColor} />
-      )}
-
-      <div
-        ref={setNodeRef}
-        className={`rounded-2xl border p-4 min-h-[80px] transition-colors ${ZONE_COLORS[zone]} ${
-          isOver ? 'ring-2 ring-lucina-secondary/40' : ''
-        }`}
-      >
-        <div className="mb-3 flex items-center justify-between">
+    <div className="flex w-80 shrink-0 flex-col">
+      <div className="mb-2 flex items-center justify-between px-1">
+        <div className="flex items-center gap-2">
           <h3 className="text-sm font-bold uppercase tracking-wide text-lucina-secondary">
             {ZONE_LABELS[zone]}
           </h3>
@@ -212,25 +188,32 @@ function ZoneSection({
             {items.length}
           </span>
         </div>
+        {headerExtra}
+      </div>
 
-        <SortableContext items={ids} strategy={rectSortingStrategy}>
+      <div
+        ref={setNodeRef}
+        className={`flex flex-1 flex-col gap-3 rounded-2xl border p-3 transition-colors ${ZONE_COLORS[zone]} ${
+          isOver ? 'ring-2 ring-lucina-secondary/40' : ''
+        }`}
+      >
+        <SortableContext items={ids} strategy={verticalListSortingStrategy}>
           {items.length === 0 ? (
-            <p className="py-6 text-center text-sm text-lucina-muted">Drop projects here</p>
+            <p className="py-8 text-center text-sm text-lucina-muted">Drop projects here</p>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {items.map((item) => (
-                <ProjectCard
-                  key={item.id}
-                  item={item}
-                  users={users}
-                  onResponsibleChange={onResponsibleChange}
-                  onStatusChange={onStatusChange}
-                  onShare={onShare}
-                />
-              ))}
-            </div>
+            items.map((item) => (
+              <ProjectCard
+                key={item.id}
+                item={item}
+                users={users}
+                onResponsibleChange={onResponsibleChange}
+                onStatusChange={onStatusChange}
+                onShare={onShare}
+              />
+            ))
           )}
         </SortableContext>
+        {footer}
       </div>
     </div>
   );
@@ -244,6 +227,7 @@ export function ProjectsBoard() {
   const [modalOpen, setModalOpen] = useState(false);
   const [shareModal, setShareModal] = useState<{ id: string; name: string } | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [showAllCompleted, setShowAllCompleted] = useState(false);
   const [dbError, setDbError] = useState('');
 
   const sensors = useSensors(
@@ -252,6 +236,15 @@ export function ProjectsBoard() {
 
   const grouped = useMemo(() => groupByZone(items), [items]);
   const activeItem = activeId ? items.find((item) => item.id === activeId) : null;
+
+  // The Complete column shows only projects completed within the window unless
+  // the user opts to show all. Hidden items stay in `items`, so drag/reorder
+  // math still operates on the full set.
+  const visibleCompleted = useMemo(() => {
+    if (showAllCompleted) return grouped.completed;
+    return grouped.completed.filter((item) => isRecentlyCompleted(item));
+  }, [grouped.completed, showAllCompleted]);
+  const hiddenCompletedCount = grouped.completed.length - visibleCompleted.length;
 
   const loadProjects = useCallback(async () => {
     try {
@@ -472,7 +465,7 @@ export function ProjectsBoard() {
         <div>
           <h1 className="text-4xl font-bold text-lucina-primary">Projects</h1>
           <p className="text-lucina-muted mt-2">
-            Drag projects between zones, mark them completed, and share with your team.
+            Drag projects across the board from Design to Complete, and share with your team.
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -505,62 +498,69 @@ export function ProjectsBoard() {
           onDragOver={handleDragOver}
           onDragEnd={handleDragEnd}
         >
-          <div className="space-y-2">
-            <ZoneSection
-              zone="active"
-              items={grouped.active}
-              users={users}
-              onResponsibleChange={handleResponsibleChange}
-              onStatusChange={handleStatusChange}
-              onShare={(id, name) => setShareModal({ id, name })}
-            />
-
-            <ZoneSection
-              zone="prioritized"
-              items={grouped.prioritized}
-              users={users}
-              onResponsibleChange={handleResponsibleChange}
-              onStatusChange={handleStatusChange}
-              onShare={(id, name) => setShareModal({ id, name })}
-              showTopDivider
-              dividerLabel="Active → Prioritized"
-              dividerColor="border-emerald-500/40"
-            />
-
-            <ZoneSection
-              zone="in_design"
-              items={grouped.in_design}
-              users={users}
-              onResponsibleChange={handleResponsibleChange}
-              onStatusChange={handleStatusChange}
-              onShare={(id, name) => setShareModal({ id, name })}
-              showTopDivider
-              dividerLabel="Prioritized → In Design"
-              dividerColor="border-amber-500/40"
-            />
-
-            <ZoneSection
-              zone="completed"
-              items={grouped.completed}
-              users={users}
-              onResponsibleChange={handleResponsibleChange}
-              onStatusChange={handleStatusChange}
-              onShare={(id, name) => setShareModal({ id, name })}
-              showTopDivider
-              dividerLabel="In Design → Completed"
-              dividerColor="border-lucina-secondary/40"
-            />
+          <div className="flex gap-4 overflow-x-auto pb-4">
+            {PRIORITY_ZONES.map((zone) =>
+              zone === 'completed' ? (
+                <KanbanColumn
+                  key={zone}
+                  zone={zone}
+                  items={visibleCompleted}
+                  users={users}
+                  onResponsibleChange={handleResponsibleChange}
+                  onStatusChange={handleStatusChange}
+                  onShare={(id, name) => setShareModal({ id, name })}
+                  headerExtra={
+                    <button
+                      type="button"
+                      onClick={() => setShowAllCompleted((prev) => !prev)}
+                      className="rounded-full border border-lucina-rose bg-lucina-white px-2.5 py-0.5 text-xs font-medium text-lucina-secondary hover:bg-lucina-surface transition-colors"
+                      title={
+                        showAllCompleted
+                          ? `Show only projects completed in the last ${COMPLETED_WINDOW_DAYS} days`
+                          : 'Show all completed projects'
+                      }
+                    >
+                      {showAllCompleted ? 'Last 7 days' : 'Show all'}
+                    </button>
+                  }
+                  footer={
+                    !showAllCompleted && hiddenCompletedCount > 0 ? (
+                      <button
+                        type="button"
+                        onClick={() => setShowAllCompleted(true)}
+                        className="w-full rounded-lg py-2 text-center text-xs font-medium text-lucina-muted hover:bg-lucina-surface hover:text-lucina-secondary transition-colors"
+                      >
+                        {hiddenCompletedCount} older{' '}
+                        {hiddenCompletedCount === 1 ? 'project' : 'projects'} hidden — show all
+                      </button>
+                    ) : null
+                  }
+                />
+              ) : (
+                <KanbanColumn
+                  key={zone}
+                  zone={zone}
+                  items={grouped[zone]}
+                  users={users}
+                  onResponsibleChange={handleResponsibleChange}
+                  onStatusChange={handleStatusChange}
+                  onShare={(id, name) => setShareModal({ id, name })}
+                />
+              )
+            )}
           </div>
 
           <DragOverlay>
             {activeItem ? (
-              <ProjectCard
-                item={activeItem}
-                users={users}
-                onResponsibleChange={() => {}}
-                onStatusChange={() => {}}
-                isDragging
-              />
+              <div className="w-80">
+                <ProjectCard
+                  item={activeItem}
+                  users={users}
+                  onResponsibleChange={() => {}}
+                  onStatusChange={() => {}}
+                  isDragging
+                />
+              </div>
             ) : null}
           </DragOverlay>
         </DndContext>
