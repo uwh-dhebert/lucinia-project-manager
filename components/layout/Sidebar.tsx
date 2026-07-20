@@ -1,6 +1,6 @@
 'use client';
 
-import { Home, FolderOpen, Sparkles } from 'lucide-react';
+import { Home, FolderOpen, Sparkles, CheckSquare } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { WikiSidebar } from '@/components/WikiSidebar';
@@ -32,6 +32,14 @@ export function AppSidebar() {
                   <a href="/projects">
                     <FolderOpen className="w-5 h-5" />
                     <span>Projects</span>
+                  </a>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <a href="/tasks">
+                    <CheckSquare className="w-5 h-5" />
+                    <span>Tasks</span>
                   </a>
                 </SidebarMenuButton>
               </SidebarMenuItem>
